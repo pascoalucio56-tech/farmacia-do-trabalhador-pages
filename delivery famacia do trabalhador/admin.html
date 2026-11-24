@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel da Farmácia - Gestão de Pedidos e Configurações</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .admin-container {
+      max-width: 920px;
+      margin: 30px auto;
+      padding: 0 16px 60px;
+    }
+    .admin-card {
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .admin-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    th {
+      background: var(--bg-main);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-outline-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: #fca5a5;
+    }
+    .btn-outline-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn-outline-primary {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: rgba(var(--primary-rgb), 0.3);
+    }
+    .btn-outline-primary:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .switch-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .switch-label input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+  </style>
+</head>
+<body style="background-color: #f1f5f9; display: block;">
+
+  <!-- Tela de Login / Autenticação Segura -->
+  <div id="admin-auth-overlay">
+    <div class="auth-card">
+      <div class="auth-card-icon">
+        <i class="fas fa-lock"></i>
+      </div>
+      <h2>Painel Administrativo</h2>
+      <p>Acesso exclusivo para gestão de produtos, preços, estoque e pedidos.</p>
+
+      <form id="admin-login-form">
+        <div class="form-group" style="text-align: left; margin-bottom: 14px;">
+          <label for="login-username" style="font-weight: 600; font-size: 13px;">Usuário</label>
+          <div style="position: relative;">
+            <i class="fas fa-user" style="position: absolute; left: 12px; top: 12px; color: var(--text-muted);"></i>
+            <input type="text" id="login-username" class="form-control" style="padding-left: 36px;" placeholder="Seu usuário" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+          <label for="login-password" style="font-weight: 600; font-size: 13px;">Senha</label>
+          <div style="position: relative;">
+            <i class="fas fa-key" style="position: absolute; left: 12px; top: 12px; color: var(--text-muted);"></i>
+            <input type="password" id="login-password" class="form-control" style="padding-left: 36px;" placeholder="Sua senha" required autocomplete="current-password">
+          </div>
+        </div>
+
+        <div id="login-error-msg" style="display: none; background: #fee2e2; color: #991b1b; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-bottom: 16px;">
+          <i class="fas fa-exclamation-triangle"></i> Usuário ou senha incorretos!
+        </div>
+
+        <button type="submit" class="btn-primary-block" style="padding: 12px; font-size: 14px; width: 100%;">
+          <i class="fas fa-sign-in-alt"></i> Entrar no Painel
+        </button>
+      </form>
+
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-muted);">
+        <i class="fas fa-info-circle"></i> Acesso padrão inicial: <strong>admin</strong> / <strong>admin123</strong><br>
+        <small>(Você pode alterar o usuário e a senha a qualquer momento dentro do painel)</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo Principal do Painel Administrativo -->
+  <div class="admin-container" id="admin-main-container" style="display: none;">
+    
+    <!-- Topo do Painel com Logo e Ações -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px; background: #ffffff; padding: 18px 22px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div id="admin-header-logo-container" style="width: 52px; height: 52px; border-radius: var(--radius-md); background: var(--primary-light); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-color);">
+          <i class="fas fa-clinic-medical" style="font-size: 26px; color: var(--primary);"></i>
+        </div>
+        <div>
+          <h1 id="admin-header-store-name" style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 2px;">
+            Painel da Farmácia do Trabalhador
+          </h1>
+          <p style="color: var(--text-muted); font-size: 12px;">Gestão de estoque, catálogo, pedidos, comanda térmica e personalização.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <a href="index.html" target="_blank" class="btn-sm btn-outline-primary" style="text-decoration: none; padding: 9px 14px; font-size: 13px;">
+          <i class="fas fa-store"></i> Ver Catálogo Online
+        </a>
+        <button type="button" onclick="logoutAdmin()" class="btn-sm btn-outline-danger" style="padding: 9px 14px; font-size: 13px;">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 0: Pedidos Recentes e Impressão Térmica -->
+    <div class="admin-card" style="border-left: 4px solid var(--primary);">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <i class="fas fa-print" style="color: var(--primary);"></i> Pedidos Recentes & Impressão de Comandas Térmicas
+        </h2>
+        <div style="display: flex; gap: 8px;">
+          <a href="comanda.html" target="_blank" class="btn-sm btn-outline-primary" style="text-decoration: none;">
+            <i class="fas fa-receipt"></i> Gerador de Comanda Avulsa
+          </a>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Data/Hora</th>
+              <th>Cliente</th>
+              <th>Tipo / Bairro</th>
+              <th>Total</th>
+              <th>Pagamento</th>
+              <th style="text-align: right;">Impressão Térmica</th>
+            </tr>
+          </thead>
+          <tbody id="orders-history-tbody">
+            <!-- Renderizado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Card 1: Identidade Visual da Farmácia (Logo e Cor do Tema) -->
+    <div class="admin-card" style="border-left: 4px solid #0284c7;">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <i class="fas fa-palette" style="color: #0284c7;"></i> Identidade Visual da Farmácia (Logo & Cor do Site)
+        </h2>
+      </div>
+
+      <form id="branding-config-form">
+        <div class="form-row">
+          <div class="form-group" style="flex: 2;">
+            <label for="admin-logo-url">URL da Logo da Farmácia (Link de Imagem PNG/JPG)</label>
+            <input type="url" id="admin-logo-url" class="form-control" placeholder="https://exemplo.com/logo-farmacia.png">
+            <small style="color: var(--text-muted); font-size: 11px;">Insira o link da sua logomarca para substituir o ícone padrão no cabeçalho do site.</small>
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 120px;">
+            <label>Pré-visualização da Logo</label>
+            <div id="admin-logo-preview" style="width: 100%; height: 50px; border: 1px dashed var(--border-color); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; background: #f8fafc; overflow: hidden;">
+              <span style="font-size: 11px; color: var(--text-muted);">Sem Logo</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 14px;">
+          <label for="admin-theme-color">Cor Principal da Página / Tema Visual</label>
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
+            <input type="color" id="admin-theme-color" value="#059669" style="width: 50px; height: 40px; border: none; cursor: pointer; border-radius: 6px; background: transparent;">
+            <span id="admin-theme-color-hex" style="font-weight: 700; font-family: monospace; font-size: 14px; color: var(--text-main);">#059669</span>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <small style="color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 6px;">Cores Prontas para Farmácias e Drogarias:</small>
+            <div class="color-presets-row">
+              <button type="button" class="color-preset-btn" style="background-color: #059669;" onclick="setThemePreset('#059669')" title="Verde Saúde (Padrão)"></button>
+              <button type="button" class="color-preset-btn" style="background-color: #0284c7;" onclick="setThemePreset('#0284c7')" title="Azul Farmácia"></button>
+              <button type="button" class="color-preset-btn" style="background-color: #dc2626;" onclick="setThemePreset('#dc2626')" title="Vermelho Cruz Vermelha"></button>
+              <button type="button" class="color-preset-btn" style="background-color: #7c3aed;" onclick="setThemePreset('#7c3aed')" title="Roxo Bem-Estar"></button>
+              <button type="button" class="color-preset-btn" style="background-color: #ea580c;" onclick="setThemePreset('#ea580c')" title="Laranja Energia"></button>
+              <button type="button" class="color-preset-btn" style="background-color: #0f766e;" onclick="setThemePreset('#0f766e')" title="Verde Petróleo"></button>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary-block" style="margin-top: 16px; width: auto; padding: 10px 22px;">
+          <i class="fas fa-save"></i> Salvar Identidade Visual & Cores
+        </button>
+      </form>
+    </div>
+
+    <!-- Card 2: Segurança & Acesso ao Painel (Alteração de Login/Senha) -->
+    <div class="admin-card" style="border-left: 4px solid #e11d48;">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <i class="fas fa-user-shield" style="color: #e11d48;"></i> Segurança & Senha do Painel
+        </h2>
+      </div>
+
+      <form id="security-config-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-change-user">Novo Usuário de Acesso</label>
+            <input type="text" id="admin-change-user" class="form-control" placeholder="Ex: amalia" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="admin-change-pass">Nova Senha</label>
+            <input type="password" id="admin-change-pass" class="form-control" placeholder="Mínimo de 4 caracteres" required autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label for="admin-confirm-pass">Confirmar Nova Senha</label>
+            <input type="password" id="admin-confirm-pass" class="form-control" placeholder="Repita a nova senha" required autocomplete="new-password">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary-block" style="margin-top: 8px; width: auto; padding: 10px 22px; background: #e11d48; border-color: #be123c;">
+          <i class="fas fa-key"></i> Atualizar Usuário e Senha
+        </button>
+      </form>
+    </div>
+
+    <!-- Card 3: Configurações Gerais e WhatsApp -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <i class="fab fa-whatsapp" style="color: #25d366;"></i> WhatsApp e Dados da Loja
+        </h2>
+        <label class="switch-label">
+          <input type="checkbox" id="admin-is-open"> Farmácia Aberta
+        </label>
+      </div>
+
+      <form id="store-config-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-store-name">Nome da Farmácia</label>
+            <input type="text" id="admin-store-name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="admin-whatsapp">WhatsApp para Receber Pedidos (com DDD)</label>
+            <input type="text" id="admin-whatsapp" class="form-control" placeholder="5581999998888" required>
+            <small style="color: var(--text-muted); font-size: 11px;">Ex: 5581999998888 (com 55 na frente sem espaços)</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-slogan">Slogan / Frase de Impacto</label>
+            <input type="text" id="admin-slogan" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="admin-delivery-time">Tempo Estimado de Entrega</label>
+            <input type="text" id="admin-delivery-time" class="form-control" placeholder="30 a 50 min">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-address">Endereço Físico (Para Retirada no Balcão)</label>
+            <input type="text" id="admin-address" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="admin-min-order">Valor Mínimo do Pedido (R$)</label>
+            <input type="number" id="admin-min-order" class="form-control" step="0.50">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-hours">Horário de Funcionamento</label>
+          <input type="text" id="admin-hours" class="form-control">
+        </div>
+
+        <button type="submit" class="btn-primary-block" style="margin-top: 10px; width: auto; padding: 10px 20px;">
+          <i class="fas fa-save"></i> Salvar Informações da Loja
+        </button>
+      </form>
+    </div>
+
+    <!-- Card 4: Chave Pix e Link de Pagamento -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <i class="fas fa-qrcode" style="color: var(--primary);"></i> Chave Pix e Link de Pagamento
+        </h2>
+      </div>
+
+      <form id="pix-config-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-pix-key">Chave Pix da Farmácia</label>
+            <input type="text" id="admin-pix-key" class="form-control" placeholder="E-mail, CNPJ, Celular ou Chave Aleatória" required>
+          </div>
+          <div class="form-group">
+            <label for="admin-pix-type">Tipo de Chave</label>
+            <select id="admin-pix-type" class="form-control">
+              <option value="CNPJ">CNPJ</option>
+              <option value="E-mail">E-mail</option>
+              <option value="Celular">Celular</option>
+              <option value="Chave Aleatória">Chave Aleatória</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-pix-beneficiary">Nome do Beneficiário / Titular da Conta</label>
+            <input type="text" id="admin-pix-beneficiary" class="form-control" placeholder="Ex: Farmácia do Trabalhador Ltda">
+          </div>
+          <div class="form-group">
+            <label for="admin-payment-link">Link de Pagamento Online (Mercado Pago / PagBank)</label>
+            <input type="url" id="admin-payment-link" class="form-control" placeholder="https://link.mercadopago.com.br/...">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary-block" style="margin-top: 10px; width: auto; padding: 10px 20px;">
+          <i class="fas fa-save"></i> Salvar Dados do Pix
+        </button>
+      </form>
+    </div>
+
+    <!-- Card 5: Gestão de Bairros e Taxas de Entrega -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <i class="fas fa-motorcycle" style="color: var(--accent);"></i> Bairros Atendidos e Taxas de Entrega
+        </h2>
+      </div>
+
+      <!-- Formulário de Novo Bairro -->
+      <form id="add-neighborhood-form" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: flex-end; margin-bottom: 20px;">
+        <div class="form-group" style="margin: 0;">
+          <label>Nome do Bairro</label>
+          <input type="text" id="new-neighborhood-name" class="form-control" placeholder="Ex: Caxangá" required>
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label>Taxa (R$)</label>
+          <input type="number" id="new-neighborhood-fee" class="form-control" step="0.50" placeholder="5.00" required>
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label>Tempo Estimado</label>
+          <input type="text" id="new-neighborhood-time" class="form-control" placeholder="30-45 min" required>
+        </div>
+        <button type="submit" class="btn-primary-block" style="padding: 10px 14px; font-size: 13px;">
+          <i class="fas fa-plus"></i> Adicionar
+        </button>
+      </form>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Bairro</th>
+              <th>Taxa de Entrega</th>
+              <th>Tempo Estimado</th>
+              <th style="text-align: right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="neighborhoods-table-body">
+            <!-- Renderizado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Card 6: Gestão Completa de Produtos & Estoque -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2 class="admin-card-title">
+          <i class="fas fa-pills" style="color: var(--primary);"></i> Produtos e Controle de Estoque
+        </h2>
+        <span id="admin-product-count" style="font-size: 13px; color: var(--primary); font-weight: 700;">0 produtos</span>
+      </div>
+
+      <!-- Formulário de Cadastro / Inclusão de Novo Produto -->
+      <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-bottom: 24px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 6px;">
+          <i class="fas fa-plus-circle"></i> Incluir Novo Medicamento / Produto no Catálogo
+        </h3>
+        
+        <form id="add-product-form">
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label for="new-prod-name">Nome do Produto / Medicamento <span class="required" style="color: #dc2626;">*</span></label>
+              <input type="text" id="new-prod-name" class="form-control" placeholder="Ex: Dipirona Monoidratada 500mg" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="new-prod-category">Categoria <span class="required" style="color: #dc2626;">*</span></label>
+              <select id="new-prod-category" class="form-control" required>
+                <option value="medicamentos">Medicamentos & Dor</option>
+                <option value="primeiros_socorros">Primeiros Socorros</option>
+                <option value="mamae_bebe">Mamãe & Bebê</option>
+                <option value="higiene">Higiene & Cuidados</option>
+                <option value="vitaminas">Vitaminas & Imunidade</option>
+                <option value="dermocosmeticos">Dermocosméticos</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Campo Especificar Para que Serve -->
+          <div class="form-row">
+            <div class="form-group" style="grid-column: span 1 / -1;">
+              <label for="new-prod-indication">
+                <i class="fas fa-stethoscope" style="color: #0284c7;"></i> Para que serve o medicamento? (Indicação Clínica para o Cliente) <span class="required" style="color: #dc2626;">*</span>
+              </label>
+              <input type="text" id="new-prod-indication" class="form-control" placeholder="Ex: Alívio rápido de dores de cabeça, dores musculares, febre e inflamações" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-prod-presentation">Apresentação / Dosagem</label>
+              <input type="text" id="new-prod-presentation" class="form-control" placeholder="Ex: Caixa com 10 comprimidos ou Frasco 100ml">
+            </div>
+            <div class="form-group">
+              <label for="new-prod-laboratory">Laboratório / Marca</label>
+              <input type="text" id="new-prod-laboratory" class="form-control" placeholder="Ex: Medley, EMS, Pampers, Johnson">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-prod-price">Preço de Venda (R$) <span class="required" style="color: #dc2626;">*</span></label>
+              <input type="number" id="new-prod-price" class="form-control" step="0.05" min="0.10" placeholder="Ex: 9.90" required>
+            </div>
+            <div class="form-group">
+              <label for="new-prod-old-price">Preço Antigo / Promoção (R$) <small style="color: var(--text-muted);">(Opcional)</small></label>
+              <input type="number" id="new-prod-old-price" class="form-control" step="0.05" placeholder="Ex: 14.50">
+            </div>
+            <!-- Campo Quantidade que tem para vender -->
+            <div class="form-group">
+              <label for="new-prod-stock">
+                <i class="fas fa-boxes" style="color: var(--primary);"></i> Quantidade em Estoque (Para Vender) <span class="required" style="color: #dc2626;">*</span>
+              </label>
+              <input type="number" id="new-prod-stock" class="form-control" min="0" value="20" placeholder="Ex: 20" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-prod-badge">Destaque / Selo <small style="color: var(--text-muted);">(Ex: Oferta, Mais Vendido)</small></label>
+              <input type="text" id="new-prod-badge" class="form-control" placeholder="Ex: Oferta Especial">
+            </div>
+            <div class="form-group">
+              <label for="new-prod-image">URL da Imagem <small style="color: var(--text-muted);">(Opcional)</small></label>
+              <input type="url" id="new-prod-image" class="form-control" placeholder="https://exemplo.com/foto.jpg">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #dc2626;">
+              <input type="checkbox" id="new-prod-prescription" style="width: 18px; height: 18px; accent-color: #dc2626;">
+              Exige retenção / apresentação de receita médica?
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary-block" style="width: auto; padding: 10px 24px; font-size: 14px;">
+            <i class="fas fa-plus"></i> Salvar e Incluir Produto no Catálogo
+          </button>
+        </form>
+      </div>
+
+      <!-- Barra de Pesquisa de Produtos da Tabela -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; flex-wrap: wrap;">
+        <div>
+          <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main);">
+            Produtos Cadastrados
+          </h3>
+          <small style="color: var(--text-muted);">Edite o preço e estoque diretamente na tabela ou clique em "Editar" para alterar todos os dados.</small>
+        </div>
+        <div style="flex: 1; max-width: 320px;">
+          <input type="text" id="admin-search-products" class="form-control" placeholder="Filtrar por nome, marca ou indicação...">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Medicamento & "Para que serve"</th>
+              <th>Categoria</th>
+              <th style="min-width: 110px;">Preço (R$)</th>
+              <th style="min-width: 100px;">Estoque (un.)</th>
+              <th>Receita?</th>
+              <th>Status</th>
+              <th style="text-align: right; min-width: 140px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="products-table-body">
+            <!-- Renderizado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Card 7: Backup e Restauração -->
+    <div class="admin-card" style="background: #f8fafc;">
+      <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 10px;">
+        <i class="fas fa-database"></i> Backup dos Dados da Farmácia
+      </h3>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+        Os dados ficam salvos com segurança no navegador. Você pode redefinir para o padrão ou restaurar a qualquer momento.
+      </p>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn-sm btn-outline-danger" id="btn-reset-defaults">
+          <i class="fas fa-undo"></i> Restaurar Dados Padrão Iniciais
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal de Edição Completa de Produto -->
+  <div class="admin-modal-overlay" id="edit-product-modal">
+    <div class="admin-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-edit" style="color: var(--primary);"></i> Editar Produto Completo
+        </h3>
+        <button type="button" onclick="closeEditModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="edit-product-form">
+        <input type="hidden" id="edit-prod-id">
+
+        <div class="form-row">
+          <div class="form-group" style="flex: 2;">
+            <label for="edit-prod-name">Nome do Medicamento / Produto</label>
+            <input type="text" id="edit-prod-name" class="form-control" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="edit-prod-category">Categoria</label>
+            <select id="edit-prod-category" class="form-control" required>
+              <option value="medicamentos">Medicamentos & Dor</option>
+              <option value="primeiros_socorros">Primeiros Socorros</option>
+              <option value="mamae_bebe">Mamãe & Bebê</option>
+              <option value="higiene">Higiene & Cuidados</option>
+              <option value="vitaminas">Vitaminas & Imunidade</option>
+              <option value="dermocosmeticos">Dermocosméticos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="edit-prod-indication">
+            <i class="fas fa-stethoscope" style="color: #0284c7;"></i> Para que serve (Indicação Clínica)
+          </label>
+          <input type="text" id="edit-prod-indication" class="form-control" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-prod-presentation">Apresentação / Dosagem</label>
+            <input type="text" id="edit-prod-presentation" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-prod-laboratory">Laboratório / Marca</label>
+            <input type="text" id="edit-prod-laboratory" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-prod-price">Preço de Venda (R$)</label>
+            <input type="number" id="edit-prod-price" class="form-control" step="0.05" min="0.10" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-prod-old-price">Preço Promocional Antigo (R$)</label>
+            <input type="number" id="edit-prod-old-price" class="form-control" step="0.05">
+          </div>
+          <div class="form-group">
+            <label for="edit-prod-stock">Quantidade em Estoque</label>
+            <input type="number" id="edit-prod-stock" class="form-control" min="0" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-prod-badge">Destaque / Selo</label>
+            <input type="text" id="edit-prod-badge" class="form-control" placeholder="Ex: Oferta">
+          </div>
+          <div class="form-group">
+            <label for="edit-prod-image">URL da Foto</label>
+            <input type="url" id="edit-prod-image" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top: 10px;">
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #dc2626;">
+              <input type="checkbox" id="edit-prod-prescription" style="width: 18px; height: 18px; accent-color: #dc2626;">
+              Exige receita médica?
+            </label>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #166534;">
+              <input type="checkbox" id="edit-prod-available" style="width: 18px; height: 18px; accent-color: #166534;">
+              Disponível para venda no catálogo?
+            </label>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+          <button type="button" class="btn-sm btn-outline-danger" onclick="closeEditModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary-block" style="width: auto; padding: 10px 20px;">
+            <i class="fas fa-save"></i> Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      checkAuthStatus();
+    });
+
+    /**
+     * Sistema de Autenticação / Login
+     */
+    function checkAuthStatus() {
+      const isAuth = sessionStorage.getItem("admin_authenticated") === "true";
+      const overlay = document.getElementById("admin-auth-overlay");
+      const mainContainer = document.getElementById("admin-main-container");
+
+      if (isAuth) {
+        if (overlay) overlay.style.display = "none";
+        if (mainContainer) mainContainer.style.display = "block";
+        initAdminPanel();
+      } else {
+        if (overlay) overlay.style.display = "flex";
+        if (mainContainer) mainContainer.style.display = "none";
+        setupLoginForm();
+      }
+    }
+
+    function setupLoginForm() {
+      const form = document.getElementById("admin-login-form");
+      const errorMsg = document.getElementById("login-error-msg");
+
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const user = document.getElementById("login-username").value.trim();
+        const pass = document.getElementById("login-password").value.trim();
+
+        if (StoreDB.verifyAdmin(user, pass)) {
+          sessionStorage.setItem("admin_authenticated", "true");
+          if (errorMsg) errorMsg.style.display = "none";
+          checkAuthStatus();
+          showToast("Acesso concedido com sucesso!", "success");
+        } else {
+          if (errorMsg) errorMsg.style.display = "block";
+          document.getElementById("login-password").value = "";
+          document.getElementById("login-password").focus();
+        }
+      };
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem("admin_authenticated");
+      location.reload();
+    }
+
+    /**
+     * Inicializa todo o Painel da Farmácia após login
+     */
+    function initAdminPanel() {
+      loadAdminConfig();
+      renderAdminOrders();
+      renderAdminNeighborhoods();
+      renderAdminProducts();
+      setupAdminForms();
+    }
+
+    function loadAdminConfig() {
+      const config = StoreDB.getStoreConfig();
+
+      // Aplica tema visual imediatamente
+      StoreDB.applyTheme(config.themeColor);
+
+      // Topo do painel
+      const headerTitle = document.getElementById("admin-header-store-name");
+      if (headerTitle) headerTitle.textContent = config.name;
+
+      const headerLogoContainer = document.getElementById("admin-header-logo-container");
+      if (headerLogoContainer) {
+        if (config.logoUrl && config.logoUrl.trim()) {
+          headerLogoContainer.innerHTML = `<img src="${config.logoUrl.trim()}" alt="${config.name}" class="store-logo-img" onerror="this.parentElement.innerHTML='<i class=\\\'fas fa-clinic-medical\\\' style=\\\'font-size: 26px; color: var(--primary);\\\'></i>'">`;
+        } else {
+          headerLogoContainer.innerHTML = `<i class="fas fa-clinic-medical" style="font-size: 26px; color: var(--primary);"></i>`;
+        }
+      }
+
+      // Card Identidade Visual
+      const logoInput = document.getElementById("admin-logo-url");
+      const colorInput = document.getElementById("admin-theme-color");
+      const colorHex = document.getElementById("admin-theme-color-hex");
+
+      if (logoInput) {
+        logoInput.value = config.logoUrl || "";
+        updateLogoPreview(config.logoUrl);
+      }
+      if (colorInput) colorInput.value = config.themeColor || "#059669";
+      if (colorHex) colorHex.textContent = config.themeColor || "#059669";
+
+      // Card Segurança
+      const userChangeInput = document.getElementById("admin-change-user");
+      if (userChangeInput) userChangeInput.value = config.adminUsername || "admin";
+
+      // Card Informações da Loja
+      document.getElementById("admin-store-name").value = config.name || "";
+      document.getElementById("admin-whatsapp").value = config.whatsapp || "";
+      document.getElementById("admin-slogan").value = config.slogan || "";
+      document.getElementById("admin-delivery-time").value = config.deliveryTimeEstimate || "";
+      document.getElementById("admin-address").value = config.address || "";
+      document.getElementById("admin-min-order").value = config.minOrderValue || 0;
+      document.getElementById("admin-hours").value = config.openingHours || "";
+      document.getElementById("admin-is-open").checked = config.isOpen;
+
+      // Card Pix
+      document.getElementById("admin-pix-key").value = config.pixKey || "";
+      document.getElementById("admin-pix-type").value = config.pixKeyType || "E-mail";
+      document.getElementById("admin-pix-beneficiary").value = config.pixBeneficiary || "";
+      document.getElementById("admin-payment-link").value = config.paymentLinkUrl || "";
+    }
+
+    function updateLogoPreview(url) {
+      const preview = document.getElementById("admin-logo-preview");
+      if (!preview) return;
+      if (url && url.trim()) {
+        preview.innerHTML = `<img src="${url.trim()}" style="max-height: 44px; max-width: 100%; object-fit: contain;" onerror="this.parentElement.innerHTML='<span style=\\\'font-size:11px;color:#dc2626;\\\'>Erro ao carregar imagem</span>'">`;
+      } else {
+        preview.innerHTML = `<span style="font-size: 11px; color: var(--text-muted);">Sem Logo</span>`;
+      }
+    }
+
+    window.setThemePreset = function(hex) {
+      const colorInput = document.getElementById("admin-theme-color");
+      const colorHex = document.getElementById("admin-theme-color-hex");
+      if (colorInput) colorInput.value = hex;
+      if (colorHex) colorHex.textContent = hex;
+      StoreDB.applyTheme(hex);
+      showToast(`Cor alterada para ${hex}! Lembre-se de salvar.`, "info");
+    };
+
+    function setupAdminForms() {
+      // 1. Identidade Visual
+      const brandingForm = document.getElementById("branding-config-form");
+      const logoInput = document.getElementById("admin-logo-url");
+      const colorInput = document.getElementById("admin-theme-color");
+      const colorHex = document.getElementById("admin-theme-color-hex");
+
+      if (logoInput) {
+        logoInput.addEventListener("input", (e) => updateLogoPreview(e.target.value));
+      }
+      if (colorInput) {
+        colorInput.addEventListener("input", (e) => {
+          if (colorHex) colorHex.textContent = e.target.value;
+          StoreDB.applyTheme(e.target.value);
+        });
+      }
+
+      if (brandingForm) {
+        brandingForm.onsubmit = (e) => {
+          e.preventDefault();
+          const config = StoreDB.getStoreConfig();
+          config.logoUrl = document.getElementById("admin-logo-url").value.trim();
+          config.themeColor = document.getElementById("admin-theme-color").value;
+          StoreDB.saveStoreConfig(config);
+          StoreDB.applyTheme(config.themeColor);
+          loadAdminConfig();
+          showToast("Logo e cores salvas com sucesso!", "success");
+        };
+      }
+
+      // 2. Segurança e Troca de Senha
+      const secForm = document.getElementById("security-config-form");
+      if (secForm) {
+        secForm.onsubmit = (e) => {
+          e.preventDefault();
+          const newUser = document.getElementById("admin-change-user").value.trim();
+          const newPass = document.getElementById("admin-change-pass").value.trim();
+          const confirmPass = document.getElementById("admin-confirm-pass").value.trim();
+
+          if (!newUser || newUser.length < 3) {
+            showToast("O nome de usuário deve ter pelo menos 3 caracteres.", "error");
+            return;
+          }
+          if (newPass.length < 4) {
+            showToast("A nova senha deve ter pelo menos 4 caracteres.", "error");
+            return;
+          }
+          if (newPass !== confirmPass) {
+            showToast("As senhas não coincidem!", "error");
+            return;
+          }
+
+          StoreDB.updateAdminCredentials(newUser, newPass);
+          document.getElementById("admin-change-pass").value = "";
+          document.getElementById("admin-confirm-pass").value = "";
+          showToast("Usuário e senha alterados com sucesso!", "success");
+        };
+      }
+
+      // 3. Salvar dados gerais da loja
+      document.getElementById("store-config-form").onsubmit = (e) => {
+        e.preventDefault();
+        const config = StoreDB.getStoreConfig();
+        config.name = document.getElementById("admin-store-name").value.trim();
+        config.whatsapp = document.getElementById("admin-whatsapp").value.trim().replace(/\D/g, "");
+        config.slogan = document.getElementById("admin-slogan").value.trim();
+        config.deliveryTimeEstimate = document.getElementById("admin-delivery-time").value.trim();
+        config.address = document.getElementById("admin-address").value.trim();
+        config.minOrderValue = parseFloat(document.getElementById("admin-min-order").value) || 0;
+        config.openingHours = document.getElementById("admin-hours").value.trim();
+        config.isOpen = document.getElementById("admin-is-open").checked;
+
+        StoreDB.saveStoreConfig(config);
+        loadAdminConfig();
+        showToast("Dados da loja atualizados com sucesso!", "success");
+      };
+
+      // 4. Salvar dados do Pix
+      document.getElementById("pix-config-form").onsubmit = (e) => {
+        e.preventDefault();
+        const config = StoreDB.getStoreConfig();
+        config.pixKey = document.getElementById("admin-pix-key").value.trim();
+        config.pixKeyType = document.getElementById("admin-pix-type").value;
+        config.pixBeneficiary = document.getElementById("admin-pix-beneficiary").value.trim();
+        config.paymentLinkUrl = document.getElementById("admin-payment-link").value.trim();
+
+        StoreDB.saveStoreConfig(config);
+        showToast("Dados do Pix e Link salvos com sucesso!", "success");
+      };
+
+      // 5. Adicionar Bairro
+      document.getElementById("add-neighborhood-form").onsubmit = (e) => {
+        e.preventDefault();
+        const name = document.getElementById("new-neighborhood-name").value.trim();
+        const fee = parseFloat(document.getElementById("new-neighborhood-fee").value) || 0;
+        const time = document.getElementById("new-neighborhood-time").value.trim();
+
+        const neighborhoods = StoreDB.getNeighborhoods();
+        neighborhoods.push({
+          id: Date.now(),
+          name,
+          fee,
+          time
+        });
+
+        StoreDB.saveNeighborhoods(neighborhoods);
+        renderAdminNeighborhoods();
+        e.target.reset();
+        showToast(`Bairro ${name} cadastrado!`, "success");
+      };
+
+      // 6. Adicionar Novo Produto (com Estoque e Indicação)
+      const addProductForm = document.getElementById("add-product-form");
+      if (addProductForm) {
+        addProductForm.onsubmit = (e) => {
+          e.preventDefault();
+          const name = document.getElementById("new-prod-name").value.trim();
+          const indication = document.getElementById("new-prod-indication").value.trim();
+          const presentation = document.getElementById("new-prod-presentation").value.trim();
+          const laboratory = document.getElementById("new-prod-laboratory").value.trim();
+          const category = document.getElementById("new-prod-category").value;
+          const price = parseFloat(document.getElementById("new-prod-price").value) || 0;
+          const oldPriceVal = document.getElementById("new-prod-old-price").value;
+          const oldPrice = oldPriceVal ? parseFloat(oldPriceVal) : 0;
+          const stockQuantity = parseInt(document.getElementById("new-prod-stock").value) || 0;
+          const badge = document.getElementById("new-prod-badge").value.trim();
+          const imageVal = document.getElementById("new-prod-image").value.trim();
+          const requiresPrescription = document.getElementById("new-prod-prescription").checked;
+
+          const defaultImg = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop&q=80";
+
+          const newProduct = {
+            id: Date.now(),
+            name,
+            indication,
+            description: indication,
+            presentation,
+            laboratory: laboratory || "Genérico / Similar",
+            category,
+            price,
+            oldPrice,
+            stockQuantity,
+            badge,
+            image: imageVal || defaultImg,
+            requiresPrescription,
+            available: stockQuantity > 0
+          };
+
+          const products = StoreDB.getProducts();
+          products.unshift(newProduct);
+          StoreDB.saveProducts(products);
+
+          renderAdminProducts();
+          addProductForm.reset();
+          document.getElementById("new-prod-stock").value = "20";
+          showToast(`Produto "${name}" incluído com sucesso!`, "success");
+        };
+      }
+
+      // 7. Busca de Produtos
+      document.getElementById("admin-search-products").addEventListener("input", (e) => {
+        renderAdminProducts(e.target.value);
+      });
+
+      // 8. Salvar Edição Completa no Modal
+      const editModalForm = document.getElementById("edit-product-form");
+      if (editModalForm) {
+        editModalForm.onsubmit = (e) => {
+          e.preventDefault();
+          const id = Number(document.getElementById("edit-prod-id").value);
+          const products = StoreDB.getProducts();
+          const p = products.find(i => i.id === id);
+
+          if (!p) {
+            showToast("Produto não encontrado.", "error");
+            closeEditModal();
+            return;
+          }
+
+          p.name = document.getElementById("edit-prod-name").value.trim();
+          p.indication = document.getElementById("edit-prod-indication").value.trim();
+          p.description = p.indication;
+          p.category = document.getElementById("edit-prod-category").value;
+          p.presentation = document.getElementById("edit-prod-presentation").value.trim();
+          p.laboratory = document.getElementById("edit-prod-laboratory").value.trim();
+          p.price = parseFloat(document.getElementById("edit-prod-price").value) || 0;
+          
+          const oldPriceVal = document.getElementById("edit-prod-old-price").value;
+          p.oldPrice = oldPriceVal ? parseFloat(oldPriceVal) : 0;
+
+          p.stockQuantity = parseInt(document.getElementById("edit-prod-stock").value) || 0;
+          p.badge = document.getElementById("edit-prod-badge").value.trim();
+          
+          const imgVal = document.getElementById("edit-prod-image").value.trim();
+          if (imgVal) p.image = imgVal;
+
+          p.requiresPrescription = document.getElementById("edit-prod-prescription").checked;
+          p.available = document.getElementById("edit-prod-available").checked;
+
+          StoreDB.saveProducts(products);
+          renderAdminProducts();
+          closeEditModal();
+          showToast(`Produto "${p.name}" atualizado com sucesso!`, "success");
+        };
+      }
+
+      // 9. Restaurar Padrões
+      document.getElementById("btn-reset-defaults").onclick = () => {
+        if (confirm("Tem certeza que deseja restaurar todos os dados para o padrão inicial?")) {
+          StoreDB.resetToDefaults();
+          loadAdminConfig();
+          renderAdminOrders();
+          renderAdminNeighborhoods();
+          renderAdminProducts();
+          showToast("Dados restaurados para o padrão original!", "success");
+        }
+      };
+    }
+
+    function renderAdminOrders() {
+      const tbody = document.getElementById("orders-history-tbody");
+      if (!tbody) return;
+
+      const history = JSON.parse(localStorage.getItem("farmacia_orders_history") || "[]");
+      tbody.innerHTML = "";
+
+      if (history.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">
+              Nenhum pedido registrado ainda. Assim que o cliente enviar um pedido pelo catálogo, ele aparecerá aqui com botão de impressão térmica.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      history.forEach((order) => {
+        const tr = document.createElement("tr");
+
+        let paymentLabel = "Pix";
+        if (order.paymentMethod === "money") paymentLabel = "Dinheiro";
+        if (order.paymentMethod === "card_delivery") paymentLabel = "Cartão";
+        if (order.paymentMethod === "link") paymentLabel = "Link Cartão";
+
+        const bairroText = order.deliveryType === "takeout" ? "Retirada Balcão" : (order.neighborhood || "Delivery");
+
+        tr.innerHTML = `
+          <td><strong>#${order.orderCode}</strong></td>
+          <td>${order.date} ${order.time}</td>
+          <td>
+            <strong>${order.customerName}</strong><br>
+            <small style="color: var(--text-muted);">${order.customerPhone}</small>
+          </td>
+          <td>${bairroText}</td>
+          <td><strong>${WhatsAppOrderSender.formatCurrency(order.total)}</strong></td>
+          <td><span style="font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${paymentLabel}</span></td>
+          <td style="text-align: right;">
+            <a href="comanda.html?code=${order.orderCode}&autoprint=1" target="_blank" class="btn-sm btn-outline-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fas fa-print"></i> Imprimir Comanda
+            </a>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAdminNeighborhoods() {
+      const tbody = document.getElementById("neighborhoods-table-body");
+      if (!tbody) return;
+
+      const neighborhoods = StoreDB.getNeighborhoods();
+      tbody.innerHTML = "";
+
+      neighborhoods.forEach((n, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${n.name}</strong></td>
+          <td>R$ ${n.fee.toFixed(2)}</td>
+          <td>${n.time}</td>
+          <td style="text-align: right;">
+            <button class="btn-sm btn-outline-danger" onclick="window.deleteNeighborhood(${index})">
+              <i class="fas fa-trash-alt"></i> Excluir
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.deleteNeighborhood = function(index) {
+      const neighborhoods = StoreDB.getNeighborhoods();
+      neighborhoods.splice(index, 1);
+      StoreDB.saveNeighborhoods(neighborhoods);
+      renderAdminNeighborhoods();
+      showToast("Bairro removido com sucesso!", "success");
+    };
+
+    function renderAdminProducts(filter = "") {
+      const tbody = document.getElementById("products-table-body");
+      const countEl = document.getElementById("admin-product-count");
+      if (!tbody) return;
+
+      let products = StoreDB.getProducts();
+      if (filter.trim()) {
+        const t = filter.toLowerCase().trim();
+        products = products.filter(p => 
+          p.name.toLowerCase().includes(t) ||
+          (p.indication && p.indication.toLowerCase().includes(t)) ||
+          (p.laboratory && p.laboratory.toLowerCase().includes(t)) ||
+          (p.category && p.category.toLowerCase().includes(t))
+        );
+      }
+
+      if (countEl) countEl.textContent = `${products.length} produtos`;
+
+      tbody.innerHTML = "";
+
+      if (products.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+              Nenhum produto encontrado. Cadastre um novo produto no formulário acima.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      products.forEach((p) => {
+        const tr = document.createElement("tr");
+        const stockQty = p.stockQuantity !== undefined ? Number(p.stockQuantity) : 20;
+
+        tr.innerHTML = `
+          <td>
+            <img src="${p.image}" alt="${p.name}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover; background: #e2e8f0;" onerror="this.src='https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop&q=80'">
+          </td>
+          <td>
+            <strong style="color: var(--text-main); font-size: 13px;">${p.name}</strong><br>
+            <small style="color: var(--text-muted);">${p.presentation || ""}</small>
+            ${p.indication ? `<div style="font-size: 11px; color: #0284c7; margin-top: 2px;"><strong>Serve para:</strong> ${p.indication}</div>` : ''}
+            ${p.laboratory ? `<small style="color: #047857; font-weight: 600;">${p.laboratory}</small>` : ''}
+          </td>
+          <td>
+            <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+              ${p.category}
+            </span>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="font-size: 12px; font-weight: bold; color: var(--text-muted);">R$</span>
+              <input type="number" step="0.10" min="0.10" value="${Number(p.price).toFixed(2)}" style="width: 75px; padding: 5px 6px; border: 1px solid var(--border-color); border-radius: 4px; font-weight: 700; color: var(--primary);" onchange="window.updateProductPrice(${p.id}, this.value)" title="Edite o valor e pressione Enter">
+            </div>
+          </td>
+          <td>
+            <input type="number" min="0" value="${stockQty}" style="width: 65px; padding: 5px 6px; border: 1px solid var(--border-color); border-radius: 4px; font-weight: 700; text-align: center; color: ${stockQty <= 5 ? '#dc2626' : 'var(--text-main)'};" onchange="window.updateProductStock(${p.id}, this.value)" title="Edite a quantidade e pressione Enter">
+          </td>
+          <td>
+            ${p.requiresPrescription 
+              ? '<span style="color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px;">Sim</span>' 
+              : '<span style="color: var(--text-subtle); font-size: 12px;">Não</span>'}
+          </td>
+          <td>
+            <button class="btn-sm" style="${p.available !== false && stockQty > 0 ? 'background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;' : 'background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;'}" onclick="window.toggleProductStock(${p.id}, ${p.available === false})" title="Clique para alternar disponibilidade">
+              <i class="fas ${p.available !== false && stockQty > 0 ? 'fa-check-circle' : 'fa-ban'}"></i>
+              ${p.available !== false && stockQty > 0 ? 'Disponível' : 'Pausado'}
+            </button>
+          </td>
+          <td style="text-align: right;">
+            <div style="display: inline-flex; gap: 4px;">
+              <button class="btn-sm btn-outline-primary" onclick="window.openEditProductModal(${p.id})" title="Editar todos os detalhes">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn-sm btn-outline-danger" onclick="window.deleteProduct(${p.id})" title="Remover produto do catálogo">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.updateProductPrice = function(productId, newPrice) {
+      const products = StoreDB.getProducts();
+      const p = products.find(i => i.id === productId);
+      if (p) {
+        const val = parseFloat(newPrice);
+        if (isNaN(val) || val <= 0) {
+          showToast("Informe um valor válido maior que zero.", "error");
+          renderAdminProducts();
+          return;
+        }
+        p.price = val;
+        StoreDB.saveProducts(products);
+        showToast(`Preço de "${p.name}" alterado para R$ ${val.toFixed(2)}!`, "success");
+      }
+    };
+
+    window.updateProductStock = function(productId, newStock) {
+      const products = StoreDB.getProducts();
+      const p = products.find(i => i.id === productId);
+      if (p) {
+        const val = parseInt(newStock);
+        if (isNaN(val) || val < 0) {
+          showToast("Informe uma quantidade de estoque válida.", "error");
+          renderAdminProducts();
+          return;
+        }
+        p.stockQuantity = val;
+        if (val === 0) {
+          p.available = false;
+        }
+        StoreDB.saveProducts(products);
+        showToast(`Estoque de "${p.name}" atualizado para ${val} un.!`, "success");
+        renderAdminProducts();
+      }
+    };
+
+    window.toggleProductStock = function(productId, setAvailable) {
+      const products = StoreDB.getProducts();
+      const p = products.find(i => i.id === productId);
+      if (p) {
+        p.available = setAvailable;
+        StoreDB.saveProducts(products);
+        renderAdminProducts();
+        showToast(`Produto "${p.name}" agora está ${setAvailable ? 'DISPONÍVEL' : 'PAUSADO (Sem Estoque)'}.`, "success");
+      }
+    };
+
+    window.openEditProductModal = function(productId) {
+      const products = StoreDB.getProducts();
+      const p = products.find(i => i.id === productId);
+      if (!p) return;
+
+      document.getElementById("edit-prod-id").value = p.id;
+      document.getElementById("edit-prod-name").value = p.name || "";
+      document.getElementById("edit-prod-indication").value = p.indication || p.description || "";
+      document.getElementById("edit-prod-category").value = p.category || "medicamentos";
+      document.getElementById("edit-prod-presentation").value = p.presentation || "";
+      document.getElementById("edit-prod-laboratory").value = p.laboratory || "";
+      document.getElementById("edit-prod-price").value = p.price || "";
+      document.getElementById("edit-prod-old-price").value = p.oldPrice || "";
+      document.getElementById("edit-prod-stock").value = p.stockQuantity !== undefined ? p.stockQuantity : 20;
+      document.getElementById("edit-prod-badge").value = p.badge || "";
+      document.getElementById("edit-prod-image").value = p.image || "";
+      document.getElementById("edit-prod-prescription").checked = !!p.requiresPrescription;
+      document.getElementById("edit-prod-available").checked = p.available !== false;
+
+      const modal = document.getElementById("edit-product-modal");
+      if (modal) modal.classList.add("open");
+    };
+
+    window.closeEditModal = function() {
+      const modal = document.getElementById("edit-product-modal");
+      if (modal) modal.classList.remove("open");
+    };
+
+    window.deleteProduct = function(productId) {
+      const products = StoreDB.getProducts();
+      const p = products.find(i => i.id === productId);
+      const name = p ? p.name : "este produto";
+
+      if (confirm(`Tem certeza que deseja remover "${name}" do catálogo da farmácia?`)) {
+        const updated = products.filter(i => i.id !== productId);
+        StoreDB.saveProducts(updated);
+        renderAdminProducts();
+        showToast(`"${name}" foi removido com sucesso!`, "success");
+      }
+    };
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      if (!container) return;
+
+      const toast = document.createElement("div");
+      toast.className = `toast ${type === "success" ? "toast-success" : type === "error" ? "toast-error" : ""}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

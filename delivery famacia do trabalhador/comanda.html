@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comanda Térmica - Farmácia do Trabalhador</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Reset e Configurações de Tela */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Painel de Controles na Tela (Oculto na Impressão) */
+    .controls-panel {
+      width: 100%;
+      max-width: 500px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #065f46;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background-color: #059669;
+      color: #ffffff;
+      flex: 1;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .btn-primary:hover {
+      background-color: #047857;
+    }
+
+    .btn-secondary {
+      background-color: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
+    }
+
+    .paper-size-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .paste-box {
+      width: 100%;
+      height: 70px;
+      padding: 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: monospace;
+      resize: vertical;
+    }
+
+    /* ==========================================================================
+       LAYOUT DA COMANDA TÉRMICA (ESTILO IMPRESSORA TÉRMICA 58mm / 80mm)
+       ========================================================================== */
+    .receipt-container {
+      background-color: #ffffff;
+      color: #000000;
+      padding: 12px 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      border-radius: 4px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 13px;
+      line-height: 1.35;
+      margin: 0 auto;
+      transition: width 0.2s;
+    }
+
+    /* Largura padrão 80mm (~72mm imprimível) */
+    .receipt-container.size-80mm {
+      width: 320px;
+    }
+
+    /* Largura compacta 58mm (~48mm imprimível) */
+    .receipt-container.size-58mm {
+      width: 240px;
+      font-size: 11px;
+      padding: 8px 10px;
+    }
+
+    .receipt-header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .receipt-store-name {
+      font-size: 16px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+
+    .receipt-store-sub {
+      font-size: 11px;
+      color: #111;
+    }
+
+    .receipt-divider {
+      border: none;
+      border-top: 1px dashed #000000;
+      margin: 8px 0;
+    }
+
+    .receipt-double-divider {
+      border: none;
+      border-top: 2px solid #000000;
+      margin: 8px 0;
+    }
+
+    .receipt-meta-box {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .receipt-section-title {
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      font-size: 12px;
+    }
+
+    /* DESTAQUE DO PONTO DE REFERÊNCIA PARA O MOTOBOY */
+    .receipt-reference-highlight {
+      border: 2px solid #000000;
+      padding: 6px 8px;
+      margin: 8px 0;
+      background-color: #fff;
+    }
+
+    .receipt-reference-highlight .ref-title {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .receipt-reference-highlight .ref-content {
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.25;
+      text-transform: uppercase;
+    }
+
+    .size-58mm .receipt-reference-highlight .ref-content {
+      font-size: 12px;
+    }
+
+    /* Tabela de Itens */
+    .receipt-items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0;
+    }
+
+    .receipt-items-table th {
+      border-bottom: 1px dashed #000;
+      padding-bottom: 4px;
+      font-size: 11px;
+      text-align: left;
+    }
+
+    .receipt-items-table th:last-child {
+      text-align: right;
+    }
+
+    .receipt-items-table td {
+      padding: 4px 0;
+      vertical-align: top;
+    }
+
+    .receipt-item-qty {
+      font-weight: bold;
+      width: 26px;
+    }
+
+    .receipt-item-desc {
+      font-weight: 600;
+    }
+
+    .receipt-item-val {
+      text-align: right;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* Linhas de Valores */
+    .receipt-calc-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+
+    .receipt-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 900;
+      margin: 6px 0;
+      padding-top: 4px;
+      border-top: 1px dashed #000;
+    }
+
+    .size-58mm .receipt-total-row {
+      font-size: 14px;
+    }
+
+    .receipt-payment-box {
+      border: 1px solid #000;
+      padding: 6px;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+
+    .receipt-signature-area {
+      margin-top: 25px;
+      padding-top: 4px;
+      border-top: 1px solid #000;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    /* ==========================================================================
+       CONFIGURAÇÕES ESPECÍFICAS DE IMPRESSÃO (@media print)
+       ========================================================================== */
+    @media print {
+      @page {
+        margin: 0;
+        size: auto;
+      }
+
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+
+      .controls-panel {
+        display: none !important;
+      }
+
+      .receipt-container {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 4mm 2mm !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Painel de Controles na Tela -->
+  <div class="controls-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1 class="controls-title">
+        <i class="fas fa-print"></i> Comanda Térmica do Motoboy
+      </h1>
+      <a href="admin.html" class="btn btn-secondary" style="text-decoration: none; padding: 6px 10px; font-size: 12px;">
+        <i class="fas fa-arrow-left"></i> Painel Farmácia
+      </a>
+    </div>
+
+    <!-- Botão Principal de Impressão -->
+    <button class="btn btn-primary" onclick="window.print()">
+      <i class="fas fa-print" style="font-size: 18px;"></i> IMPRIMIR COMANDA AGORA
+    </button>
+
+    <!-- Largura do Papel -->
+    <div class="paper-size-selector">
+      <span>Largura da Impressora:</span>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <input type="radio" name="paper_size" value="80mm" checked onchange="changePaperSize('80mm')"> 80mm (Padrão)
+      </label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <input type="radio" name="paper_size" value="58mm" onchange="changePaperSize('58mm')"> 58mm (Compacta)
+      </label>
+    </div>
+
+    <!-- Colar Mensagem do WhatsApp se vier avulsa -->
+    <div>
+      <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; color: #475569;">
+        Colar texto do WhatsApp (Opcional):
+      </label>
+      <textarea id="paste-whatsapp-input" class="paste-box" placeholder="Cole aqui o texto copiado do WhatsApp para gerar a comanda..."></textarea>
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 6px; font-size: 12px;" onclick="parsePastedWhatsAppText()">
+        <i class="fas fa-magic"></i> Converter Texto em Comanda Térmica
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       CUPOM / COMANDA TÉRMICA (O que será impresso)
+       ======================================================================== -->
+  <div class="receipt-container size-80mm" id="receipt-paper">
+    
+    <!-- Cabeçalho -->
+    <div class="receipt-header">
+      <div class="receipt-store-name" id="rec-store-name">FARMÁCIA DO TRABALHADOR</div>
+      <div class="receipt-store-sub" id="rec-store-address">Av. Principal, 1500 - Centro</div>
+      <div class="receipt-store-sub">Tel/WhatsApp: <span id="rec-store-phone">(81) 99999-8888</span></div>
+    </div>
+
+    <div class="receipt-double-divider"></div>
+
+    <!-- Identificação do Pedido -->
+    <div class="receipt-meta-box">
+      <span>PEDIDO: <span id="rec-order-code">#FARMA-0000</span></span>
+      <span id="rec-order-datetime">12/11 17:35</span>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <!-- Dados do Cliente -->
+    <div>
+      <div class="receipt-section-title">CLIENTE</div>
+      <div><strong>Nome:</strong> <span id="rec-customer-name">Carlos Eduardo</span></div>
+      <div><strong>Tel/Whats:</strong> <span id="rec-customer-phone">(81) 99876-5432</span></div>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <!-- Endereço de Entrega -->
+    <div>
+      <div class="receipt-section-title" id="rec-delivery-type-title">ENTREGA (DELIVERY)</div>
+      <div id="rec-delivery-address-block">
+        <div><strong>Endereço:</strong> <span id="rec-street-number">Rua das Flores, 345</span></div>
+        <div id="rec-complement-row"><strong>Compl:</strong> <span id="rec-complement">Apto 201</span></div>
+        <div><strong>Bairro:</strong> <span id="rec-neighborhood">Boa Viagem</span></div>
+        <div id="rec-cep-row"><strong>CEP:</strong> <span id="rec-cep">51020-000</span></div>
+      </div>
+    </div>
+
+    <!-- PONTO DE REFERÊNCIA EM DESTAQUE MÁXIMO PARA O MOTOBOY -->
+    <div class="receipt-reference-highlight" id="rec-reference-box">
+      <span class="ref-title">★ PONTO DE REFERÊNCIA ★</span>
+      <div class="ref-content" id="rec-reference-point">EM FRENTE À PADARIA BOA VIAGEM</div>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <!-- Itens do Pedido -->
+    <div class="receipt-section-title">ITENS DO PEDIDO</div>
+    <table class="receipt-items-table">
+      <thead>
+        <tr>
+          <th style="width: 25px;">QTD</th>
+          <th>PRODUTO</th>
+          <th style="text-align: right;">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody id="rec-items-tbody">
+        <!-- Preenchido via JavaScript -->
+      </tbody>
+    </table>
+
+    <div class="receipt-divider"></div>
+
+    <!-- Totais -->
+    <div>
+      <div class="receipt-calc-row">
+        <span>Subtotal:</span>
+        <span id="rec-subtotal">R$ 0,00</span>
+      </div>
+      <div class="receipt-calc-row">
+        <span>Taxa de Entrega:</span>
+        <span id="rec-delivery-fee">R$ 0,00</span>
+      </div>
+      <div class="receipt-total-row">
+        <span>TOTAL A COBRAR:</span>
+        <span id="rec-total-final">R$ 0,00</span>
+      </div>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <!-- Forma de Pagamento -->
+    <div class="receipt-payment-box">
+      <div style="font-weight: 900; margin-bottom: 2px;">
+        PAGAMENTO: <span id="rec-payment-method">PIX ONLINE</span>
+      </div>
+      <div id="rec-payment-detail" style="font-size: 11px;">Comprovante no WhatsApp</div>
+    </div>
+
+    <!-- Alerta de Receita Médica se Houver -->
+    <div id="rec-prescription-alert" style="display: none; border: 1px dashed #000; padding: 4px; margin-top: 6px; font-weight: bold; font-size: 11px;">
+      [ ! ] EXIGE RETENÇÃO DE RECEITA MÉDICA
+    </div>
+
+    <!-- Observações do Cliente -->
+    <div id="rec-notes-box" style="display: none; margin-top: 6px; font-size: 11px;">
+      <strong>Obs:</strong> <span id="rec-notes">Deixar com o porteiro.</span>
+    </div>
+
+    <!-- Canhoto de Assinatura -->
+    <div class="receipt-signature-area">
+      ASSINATURA DE QUEM RECEBEU:<br><br>
+      ____________________________________
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      loadStoreHeader();
+      loadOrderData();
+    });
+
+    function changePaperSize(size) {
+      const paper = document.getElementById("receipt-paper");
+      if (size === "58mm") {
+        paper.classList.remove("size-80mm");
+        paper.classList.add("size-58mm");
+      } else {
+        paper.classList.remove("size-58mm");
+        paper.classList.add("size-80mm");
+      }
+    }
+
+    function loadStoreHeader() {
+      const config = StoreDB.getStoreConfig();
+      document.getElementById("rec-store-name").textContent = (config.name || "FARMÁCIA DO TRABALHADOR").toUpperCase();
+      document.getElementById("rec-store-address").textContent = config.address || "";
+      document.getElementById("rec-store-phone").textContent = config.phoneDisplay || config.whatsapp || "";
+    }
+
+    function loadOrderData() {
+      // 1. Tenta carregar pelo ID na URL (Ex: ?code=FARMA-XXXX) ou o último pedido do LocalStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryCode = urlParams.get("code");
+
+      let order = null;
+
+      if (queryCode) {
+        const history = JSON.parse(localStorage.getItem("farmacia_orders_history") || "[]");
+        order = history.find(o => o.orderCode === queryCode);
+      }
+
+      if (!order) {
+        const lastOrder = localStorage.getItem("farmacia_last_order");
+        if (lastOrder) {
+          try { order = JSON.parse(lastOrder); } catch (e) {}
+        }
+      }
+
+      if (order) {
+        renderOrderToReceipt(order);
+      } else {
+        // Exibe exemplo se nenhum pedido recente existir
+        renderMockOrder();
+      }
+
+      // Auto-impressão se passado na URL: ?autoprint=1
+      if (urlParams.get("autoprint") === "1") {
+        setTimeout(() => window.print(), 500);
+      }
+    }
+
+    function renderOrderToReceipt(order) {
+      document.getElementById("rec-order-code").textContent = `#${order.orderCode || "FARMA-PEDIDO"}`;
+      document.getElementById("rec-order-datetime").textContent = `${order.date || ""} ${order.time || ""}`;
+
+      document.getElementById("rec-customer-name").textContent = order.customerName || "";
+      document.getElementById("rec-customer-phone").textContent = order.customerPhone || "";
+
+      const refBox = document.getElementById("rec-reference-box");
+      const refText = document.getElementById("rec-reference-point");
+
+      if (order.deliveryType === "takeout") {
+        document.getElementById("rec-delivery-type-title").textContent = "RETIRADA NO BALCÃO";
+        document.getElementById("rec-delivery-address-block").innerHTML = "<div>Cliente retirará pessoalmente na farmácia.</div>";
+        refBox.style.display = "none";
+      } else {
+        document.getElementById("rec-delivery-type-title").textContent = "ENTREGA (DELIVERY)";
+        document.getElementById("rec-street-number").textContent = `${order.street || ""}, nº ${order.number || ""}`;
+        
+        if (order.complement) {
+          document.getElementById("rec-complement-row").style.display = "block";
+          document.getElementById("rec-complement").textContent = order.complement;
+        } else {
+          document.getElementById("rec-complement-row").style.display = "none";
+        }
+
+        document.getElementById("rec-neighborhood").textContent = order.neighborhood || "";
+        
+        if (order.cep) {
+          document.getElementById("rec-cep-row").style.display = "block";
+          document.getElementById("rec-cep").textContent = order.cep;
+        } else {
+          document.getElementById("rec-cep-row").style.display = "none";
+        }
+
+        // Ponto de Referência
+        refBox.style.display = "block";
+        refText.textContent = (order.referencePoint || "NÃO INFORMADO").toUpperCase();
+      }
+
+      // Itens
+      const tbody = document.getElementById("rec-items-tbody");
+      tbody.innerHTML = "";
+      if (order.items && order.items.length > 0) {
+        order.items.forEach(item => {
+          const itemTotal = (item.price * item.qty).toFixed(2);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="receipt-item-qty">${item.qty}x</td>
+            <td class="receipt-item-desc">
+              ${item.name}
+              ${item.requiresPrescription ? '<br><small style="font-size:10px;">[RECEITA]</small>' : ''}
+            </td>
+            <td class="receipt-item-val">R$ ${itemTotal}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Valores
+      document.getElementById("rec-subtotal").textContent = WhatsAppOrderSender.formatCurrency(order.subtotal || 0);
+      document.getElementById("rec-delivery-fee").textContent = order.deliveryType === "takeout" ? "Grátis" : WhatsAppOrderSender.formatCurrency(order.deliveryFee || 0);
+      document.getElementById("rec-total-final").textContent = WhatsAppOrderSender.formatCurrency(order.total || 0);
+
+      // Pagamento
+      const payMethod = document.getElementById("rec-payment-method");
+      const payDetail = document.getElementById("rec-payment-detail");
+
+      if (order.paymentMethod === "pix") {
+        payMethod.textContent = "PIX ONLINE";
+        payDetail.textContent = "Verificar comprovante anexo no WhatsApp";
+      } else if (order.paymentMethod === "link") {
+        payMethod.textContent = "LINK ONLINE (CARTÃO)";
+        payDetail.textContent = "Pago via link Mercado Pago/PagBank";
+      } else if (order.paymentMethod === "money") {
+        payMethod.textContent = "DINHEIRO NA ENTREGA";
+        if (order.needChange && order.changeFor) {
+          const troco = (order.changeFor - order.total).toFixed(2);
+          payDetail.textContent = `Troco para: R$ ${Number(order.changeFor).toFixed(2)} (Levar: R$ ${troco})`;
+        } else {
+          payDetail.textContent = "Valor exato (sem troco)";
+        }
+      } else if (order.paymentMethod === "card_delivery") {
+        payMethod.textContent = "CARTÃO NA ENTREGA";
+        payDetail.textContent = `LEVAR MAQUININHA (${order.cardType || "Débito/Crédito"})`;
+      }
+
+      // Receita Médica
+      const prescAlert = document.getElementById("rec-prescription-alert");
+      prescAlert.style.display = order.hasPrescriptionItems ? "block" : "none";
+
+      // Observações
+      const notesBox = document.getElementById("rec-notes-box");
+      const notesText = document.getElementById("rec-notes");
+      if (order.notes && order.notes.trim()) {
+        notesBox.style.display = "block";
+        notesText.textContent = order.notes;
+      } else {
+        notesBox.style.display = "none";
+      }
+    }
+
+    function renderMockOrder() {
+      renderOrderToReceipt({
+        orderCode: "EXEMPLO",
+        date: new Date().toLocaleDateString("pt-BR"),
+        time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        customerName: "Carlos Eduardo Silveira",
+        customerPhone: "(81) 99876-5432",
+        deliveryType: "delivery",
+        street: "Rua das Flores",
+        number: "345",
+        complement: "Apto 201",
+        neighborhood: "Boa Viagem",
+        cep: "51020-000",
+        referencePoint: "Em frente à Padaria Boa Viagem, portão branco",
+        items: [
+          { name: "Dipirona Monoidratada 500mg 10 cpr", price: 4.90, qty: 2, requiresPrescription: false },
+          { name: "Fralda Pampers Confort Sec Tam G", price: 49.90, qty: 1, requiresPrescription: false }
+        ],
+        subtotal: 59.70,
+        deliveryFee: 6.00,
+        total: 65.70,
+        paymentMethod: "pix",
+        hasPrescriptionItems: false,
+        notes: "Favor chamar no interfone do 201."
+      });
+    }
+
+    // Parser inteligente caso o atendente cole a mensagem crua do WhatsApp
+    function parsePastedWhatsAppText() {
+      const text = document.getElementById("paste-whatsapp-input").value;
+      if (!text.trim()) {
+        alert("Por favor, cole o texto do WhatsApp na caixa.");
+        return;
+      }
+
+      try {
+        const order = {
+          orderCode: "WPP-" + Math.floor(1000 + Math.random() * 9000),
+          date: new Date().toLocaleDateString("pt-BR"),
+          time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+          customerName: "Cliente",
+          customerPhone: "",
+          deliveryType: "delivery",
+          street: "",
+          number: "",
+          complement: "",
+          neighborhood: "",
+          cep: "",
+          referencePoint: "",
+          items: [],
+          subtotal: 0,
+          deliveryFee: 0,
+          total: 0,
+          paymentMethod: "pix",
+          notes: ""
+        };
+
+        const lines = text.split("\n");
+        lines.forEach(line => {
+          if (line.includes("Identificador:")) order.orderCode = line.split("Identificador:")[1].replace(/[#*]/g, "").trim();
+          if (line.includes("Nome:")) order.customerName = line.split("Nome:")[1].replace(/[*•]/g, "").trim();
+          if (line.includes("Contato/WhatsApp:")) order.customerPhone = line.split("Contato/WhatsApp:")[1].replace(/[*•]/g, "").trim();
+          if (line.includes("Rua/Av:")) {
+            const parts = line.split("Rua/Av:")[1].replace(/[*•]/g, "").trim().split(", nº ");
+            order.street = parts[0] || "";
+            order.number = parts[1] || "";
+          }
+          if (line.includes("Bairro:")) order.neighborhood = line.split("Bairro:")[1].replace(/[*•]/g, "").trim();
+          if (line.includes("PONTO DE REFERÊNCIA:")) order.referencePoint = line.split("PONTO DE REFERÊNCIA:")[1].replace(/[*•📌]/g, "").trim();
+          if (line.includes("Subtotal:")) {
+            const val = line.match(/\d+[,.]\d+/);
+            if (val) order.subtotal = parseFloat(val[0].replace(",", "."));
+          }
+          if (line.includes("Taxa de Entrega:")) {
+            const val = line.match(/\d+[,.]\d+/);
+            if (val) order.deliveryFee = parseFloat(val[0].replace(",", "."));
+          }
+          if (line.includes("VALOR TOTAL:")) {
+            const val = line.match(/\d+[,.]\d+/);
+            if (val) order.total = parseFloat(val[0].replace(",", "."));
+          }
+          if (line.toLowerCase().includes("dinheiro")) order.paymentMethod = "money";
+          if (line.toLowerCase().includes("cartão") || line.toLowerCase().includes("maquininha")) order.paymentMethod = "card_delivery";
+        });
+
+        renderOrderToReceipt(order);
+        alert("Comanda gerada a partir do texto com sucesso!");
+      } catch (e) {
+        alert("Não foi possível identificar todos os dados automaticamente. Verifique o texto colado.");
+      }
+    }
+  </script>
+</body>
+</html>

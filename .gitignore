@@ -1,0 +1,40 @@
+# Dependências Node.js
+node_modules/
+
+# Build / distribuição
+dist/
+build/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos de ambiente (segredos)
+.env
+.env.local
+.env.*.local
+
+# Cache do sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos de editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Arquivos temporários do Electron
+*.pak
+*.bin
+*.pdb
+
+# Zips de build gerados
+*.zip
