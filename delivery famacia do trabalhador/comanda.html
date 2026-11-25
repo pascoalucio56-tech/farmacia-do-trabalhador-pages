@@ -590,8 +590,10 @@
       const payDetail = document.getElementById("rec-payment-detail");
 
       if (order.paymentMethod === "pix") {
-        payMethod.textContent = "PIX ONLINE";
-        payDetail.textContent = "Verificar comprovante anexo no WhatsApp";
+        payMethod.textContent = order.pixConfirmed ? "PIX PAGO (CONFIRMADO)" : "PIX ONLINE";
+        payDetail.textContent = order.pixConfirmed
+          ? "Pagamento via QR Code Pix processado e aprovado"
+          : "Verificar comprovante anexo no WhatsApp";
       } else if (order.paymentMethod === "link") {
         payMethod.textContent = "LINK ONLINE (CARTÃO)";
         payDetail.textContent = "Pago via link Mercado Pago/PagBank";

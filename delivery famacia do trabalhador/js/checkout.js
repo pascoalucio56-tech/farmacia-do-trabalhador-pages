@@ -143,6 +143,12 @@ class CheckoutManager {
     if (submitBtn) {
       submitBtn.addEventListener("click", () => this.handleOrderSubmission());
     }
+
+    // Confirmação de Pagamento Pix (Modo Demonstração -> Processa Comanda)
+    const confirmPixBtn = document.getElementById("btn-confirm-pix-payment");
+    if (confirmPixBtn) {
+      confirmPixBtn.addEventListener("click", () => this.handlePixPaymentConfirmation());
+    }
   }
 
   async fetchCep(cep) {
@@ -251,13 +257,21 @@ class CheckoutManager {
       const pixTotalEl = document.getElementById("pix-amount-display");
       const qrImg = document.getElementById("pix-qr-img");
 
-      if (pixKeyInput) pixKeyInput.value = storeConfig.pixKey;
+      const pixPayload = this.generatePixPayload({
+        key: storeConfig.pixKey || "pix@farmacia.com.br",
+        name: storeConfig.pixBeneficiary || storeConfig.name || "FARMACIA DO TRABALHADOR",
+        city: "BRASIL",
+        amount: total,
+        txid: "FARMACIA"
+      });
+
+      if (pixKeyInput) pixKeyInput.value = pixPayload;
       if (pixBeneficiaryEl) pixBeneficiaryEl.textContent = storeConfig.pixBeneficiary;
       if (pixTotalEl) pixTotalEl.textContent = WhatsAppOrderSender.formatCurrency(total);
 
-      // Gera QR Code via API pública do QR Server com a chave da farmácia
+      // Gera QR Code Pix oficial (BR Code EMV) via API pública do QR Server
       if (qrImg) {
-        const qrContent = encodeURIComponent(`PIX: ${storeConfig.pixKey} | VALOR: R$ ${total.toFixed(2)} | FARMACIA DO TRABALHADOR`);
+        const qrContent = encodeURIComponent(pixPayload);
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${qrContent}`;
       }
     } else if (this.selectedPayment === "link" && linkBox) {
@@ -271,10 +285,62 @@ class CheckoutManager {
     }
   }
 
-  handleOrderSubmission() {
+  /**
+   * Gera código Pix Copia e Cola / QR Code no padrão oficial EMV (BR Code)
+   */
+  generatePixPayload({ key, name, city, amount, txid = "FARMACIA" }) {
+    const normalizeText = (str, maxLen) =>
+      String(str || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9 ]/g, "")
+        .trim()
+        .toUpperCase()
+        .slice(0, maxLen);
+
+    const tlv = (id, value) => `${id}${String(value.length).padStart(2, "0")}${value}`;
+
+    const cleanKey = String(key || "").trim();
+    const merchantName = normalizeText(name, 25) || "FARMACIA";
+    const merchantCity = normalizeText(city, 15) || "BRASIL";
+    const cleanTxid = normalizeText(txid, 25).replace(/\s+/g, "") || "FARMACIA";
+
+    const merchantAccount = tlv("00", "BR.GOV.BCB.PIX") + tlv("01", cleanKey);
+    const additionalData = tlv("05", cleanTxid);
+
+    let payload =
+      tlv("00", "01") +
+      tlv("26", merchantAccount) +
+      tlv("52", "0000") +
+      tlv("53", "986");
+
+    if (amount > 0) {
+      payload += tlv("54", Number(amount).toFixed(2));
+    }
+
+    payload +=
+      tlv("58", "BR") +
+      tlv("59", merchantName) +
+      tlv("60", merchantCity) +
+      tlv("62", additionalData) +
+      "6304";
+
+    // Cálculo CRC16-CCITT (polinômio 0x1021)
+    let crc = 0xffff;
+    for (let i = 0; i < payload.length; i++) {
+      crc ^= payload.charCodeAt(i) << 8;
+      for (let j = 0; j < 8; j++) {
+        crc = (crc & 0x8000) !== 0 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
+      }
+    }
+
+    return payload + crc.toString(16).toUpperCase().padStart(4, "0");
+  }
+
+  validateAndBuildOrderData() {
     if (cart.getItems().length === 0) {
       showToast("Sua cesta está vazia!", "error");
-      return;
+      return null;
     }
 
     const storeConfig = StoreDB.getStoreConfig();
@@ -282,7 +348,7 @@ class CheckoutManager {
 
     if (subtotal < storeConfig.minOrderValue) {
       showToast(`O valor mínimo para pedido é de ${WhatsAppOrderSender.formatCurrency(storeConfig.minOrderValue)}`, "error");
-      return;
+      return null;
     }
 
     // Validações
@@ -292,13 +358,13 @@ class CheckoutManager {
     if (!customerName) {
       showToast("Por favor, informe seu Nome Completo.", "error");
       document.getElementById("checkout-name")?.focus();
-      return;
+      return null;
     }
 
     if (!customerPhone || customerPhone.length < 14) {
       showToast("Por favor, informe seu WhatsApp de contato com DDD.", "error");
       document.getElementById("checkout-phone")?.focus();
-      return;
+      return null;
     }
 
     let street = "";
@@ -319,26 +385,26 @@ class CheckoutManager {
       if (!street) {
         showToast("Informe o nome da sua Rua/Avenida.", "error");
         document.getElementById("checkout-street")?.focus();
-        return;
+        return null;
       }
 
       if (!number) {
         showToast("Informe o Número do imóvel.", "error");
         document.getElementById("checkout-number")?.focus();
-        return;
+        return null;
       }
 
       if (!neighborhood) {
         showToast("Selecione o Bairro para entrega.", "error");
         document.getElementById("checkout-neighborhood")?.focus();
-        return;
+        return null;
       }
 
       // Ponto de Referência Obrigatório
       if (!referencePoint) {
         showToast("Por favor, preencha o Ponto de Referência para auxiliar o entregador.", "error");
         document.getElementById("checkout-reference")?.focus();
-        return;
+        return null;
       }
     }
 
@@ -351,7 +417,7 @@ class CheckoutManager {
       if (!changeVal || changeVal <= total) {
         showToast(`O valor para troco deve ser maior que o total do pedido (${WhatsAppOrderSender.formatCurrency(total)})`, "error");
         document.getElementById("checkout-change-for")?.focus();
-        return;
+        return null;
       }
       changeFor = changeVal;
     }
@@ -365,7 +431,7 @@ class CheckoutManager {
 
     const notes = document.getElementById("checkout-notes")?.value.trim() || "";
 
-    const orderData = {
+    return {
       orderCode: WhatsAppOrderSender.generateOrderCode(),
       date: new Date().toLocaleDateString("pt-BR"),
       time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -387,10 +453,12 @@ class CheckoutManager {
       changeFor,
       cardType,
       notes,
-      hasPrescriptionItems: cart.hasPrescriptionItems()
+      hasPrescriptionItems: cart.hasPrescriptionItems(),
+      pixConfirmed: false
     };
+  }
 
-    // Salva no histórico para geração da comanda térmica
+  saveOrderToHistory(orderData) {
     try {
       localStorage.setItem("farmacia_last_order", JSON.stringify(orderData));
       const history = JSON.parse(localStorage.getItem("farmacia_orders_history") || "[]");
@@ -400,6 +468,74 @@ class CheckoutManager {
     } catch (e) {
       console.error("Erro ao salvar histórico do pedido:", e);
     }
+  }
+
+  handlePixPaymentConfirmation() {
+    const orderData = this.validateAndBuildOrderData();
+    if (!orderData) return;
+
+    const btn = document.getElementById("btn-confirm-pix-payment");
+    const statusBox = document.getElementById("pix-payment-status");
+
+    // Abre a aba imediatamente no clique para evitar bloqueio de pop-up pelo navegador
+    const comandaWin = window.open("", "_blank");
+    if (comandaWin) {
+      comandaWin.document.write("<p style='font-family:sans-serif;padding:24px;'>Processando pagamento Pix e gerando comanda...</p>");
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Processando pagamento Pix...</span>`;
+    }
+
+    if (statusBox) {
+      statusBox.style.display = "block";
+      statusBox.style.background = "#fef9c3";
+      statusBox.style.color = "#854d0e";
+      statusBox.style.border = "1px solid #fde047";
+      statusBox.innerHTML = `<i class="fas fa-clock"></i> Validando pagamento Pix...`;
+    }
+
+    setTimeout(() => {
+      orderData.pixConfirmed = true;
+      orderData.paymentMethod = "pix";
+      this.saveOrderToHistory(orderData);
+
+      if (statusBox) {
+        statusBox.style.background = "#dcfce7";
+        statusBox.style.color = "#166534";
+        statusBox.style.border = "1px solid #86efac";
+        statusBox.innerHTML = `<i class="fas fa-check-circle"></i> Pagamento Pix aprovado! Comanda #${orderData.orderCode} processada.`;
+      }
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fas fa-check-circle"></i> <span>Já Paguei o Pix — Processar Comanda</span>`;
+      }
+
+      showToast("Pagamento Pix confirmado! Abrindo comanda...", "success");
+
+      const comandaUrl = `comanda.html?code=${encodeURIComponent(orderData.orderCode)}&autoprint=1`;
+      if (comandaWin) {
+        comandaWin.location.href = comandaUrl;
+      } else {
+        window.open(comandaUrl, "_blank");
+      }
+
+      setTimeout(() => {
+        cart.clear();
+        closeModal("checkout-modal");
+        closeModal("cart-modal");
+        if (statusBox) statusBox.style.display = "none";
+      }, 1200);
+    }, 1200);
+  }
+
+  handleOrderSubmission() {
+    const orderData = this.validateAndBuildOrderData();
+    if (!orderData) return;
+
+    this.saveOrderToHistory(orderData);
 
     // Envia o pedido pelo WhatsApp
     WhatsAppOrderSender.sendOrder(orderData);
