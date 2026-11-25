@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Farmácia do Trabalhador - Delivery Online</title>
+  
+  <meta name="description" content="Peça remédios, fraldas, higiene e primeiros socorros sem sair de casa. Entrega rápida e pagamento via Pix ou na entrega.">
+  <meta name="theme-color" content="#059669">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Estilos Customizados -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Container Mobile-First -->
+  <div class="app-container">
+    
+    <!-- Cabeçalho da Loja -->
+    <header class="store-header">
+      <div class="store-header-top">
+        <span class="brand-badge"><i class="fas fa-heartbeat"></i> Farmácia & Drogaria</span>
+        <a href="admin.html" class="admin-link" title="Painel Administrativo da Farmácia">
+          <i class="fas fa-cog"></i> Painel Farmácia
+        </a>
+      </div>
+
+      <div class="store-info-wrapper">
+        <div class="store-logo" id="store-logo-container">
+          <i class="fas fa-prescription-bottle-alt"></i>
+        </div>
+        <div class="store-details">
+          <h1 class="store-name">
+            <span id="store-name-display">Farmácia do Trabalhador</span>
+            <i class="fas fa-check-circle verified-icon" title="Verificada"></i>
+          </h1>
+          <p class="store-slogan" id="store-slogan-display">Sua saúde em primeiro lugar com o menor preço</p>
+          <div class="store-status-bar">
+            <span id="store-status-badge" class="status-indicator status-open">
+              <i class="fas fa-circle"></i> Aberto Agora
+            </span>
+            <span class="delivery-time">
+              <i class="fas fa-motorcycle"></i> <span id="store-delivery-time-display">30 a 50 min</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Destaques Rápidos -->
+    <div class="store-quick-features">
+      <div class="quick-feature-item">
+        <i class="fas fa-bolt"></i>
+        <span>Entrega Rápida</span>
+        <small>Via Motoboy</small>
+      </div>
+      <div class="quick-feature-item">
+        <i class="fas fa-qrcode"></i>
+        <span>Pix ou Entrega</span>
+        <small>Cartão ou Dinheiro</small>
+      </div>
+      <div class="quick-feature-item">
+        <i class="fab fa-whatsapp"></i>
+        <span>Pedido Direto</span>
+        <small>No WhatsApp</small>
+      </div>
+    </div>
+
+    <!-- Barra Sticky com Busca e Categorias -->
+    <div class="sticky-nav-container">
+      <div class="search-box-wrapper">
+        <div class="search-input-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="search-input" placeholder="Buscar por remédio, produto ou marca..." autocomplete="off">
+          <button id="search-clear-btn" class="search-clear-btn" title="Limpar busca">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Abas de Categorias -->
+      <nav class="categories-nav" id="categories-nav-container">
+        <!-- Renderizado dinamicamente via app.js -->
+      </nav>
+    </div>
+
+    <!-- Catálogo de Produtos -->
+    <main class="catalog-content">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-tags"></i> Produtos Disponíveis
+        </h2>
+        <span class="products-count" id="products-count">Carregando...</span>
+      </div>
+
+      <div class="products-grid" id="products-grid">
+        <!-- Renderizado dinamicamente via app.js -->
+      </div>
+    </main>
+
+    <!-- Barra da Sacola Flutuante (Fixa no Rodapé) -->
+    <div class="floating-cart-bar" id="floating-cart-bar">
+      <button class="cart-bar-button" id="floating-cart-btn">
+        <div class="cart-bar-left">
+          <i class="fas fa-shopping-basket"></i>
+          <span class="cart-badge-count" id="floating-cart-count">0 itens</span>
+          <span>Ver Sacola</span>
+        </div>
+        <div class="cart-bar-total" id="floating-cart-total">R$ 0,00</div>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================
+       MODAL 1: DRAWER DA SACOLA DE COMPRAS
+       ======================================================================== -->
+  <div class="modal-overlay" id="cart-modal">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h3 class="drawer-title">
+          <i class="fas fa-shopping-basket" style="color: var(--primary);"></i> Sua Sacola
+        </h3>
+        <button class="drawer-close-btn" title="Fechar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Alerta se houver produtos controlados -->
+        <div class="prescription-warning-banner" id="cart-prescription-warning" style="display: none;">
+          <i class="fas fa-file-prescription"></i>
+          <p>
+            <strong>Atenção:</strong> Sua sacola contém medicamentos sob prescrição médica. Lembre-se de enviar a foto da receita no WhatsApp após enviar o pedido.
+          </p>
+        </div>
+
+        <!-- Lista de Itens -->
+        <div class="cart-items-list" id="cart-modal-items">
+          <!-- Renderizado via app.js -->
+        </div>
+
+        <!-- Resumo -->
+        <div class="summary-box">
+          <div class="summary-row">
+            <span>Subtotal dos Itens</span>
+            <span id="cart-modal-subtotal">R$ 0,00</span>
+          </div>
+          <div class="summary-row total-row">
+            <span>Subtotal</span>
+            <span id="cart-modal-total">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button class="btn-primary-block" id="btn-go-to-checkout">
+          <span>Avançar para Entrega e Pagamento</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: DRAWER DE CHECKOUT (ENDEREÇO, PONTO DE REF. E PAGAMENTO)
+       ======================================================================== -->
+  <div class="modal-overlay" id="checkout-modal">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <button class="drawer-close-btn" id="btn-back-to-cart" title="Voltar para a Sacola">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h3 class="drawer-title">
+          <i class="fas fa-clipboard-check" style="color: var(--primary);"></i> Finalizar Pedido
+        </h3>
+        <button class="drawer-close-btn" title="Fechar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="drawer-body">
+        
+        <!-- Tipo de Atendimento -->
+        <div class="form-section">
+          <label class="form-section-title"><i class="fas fa-route"></i> Como deseja receber?</label>
+          <div class="delivery-options-toggle">
+            <button type="button" class="delivery-type-btn active" data-type="delivery">
+              <i class="fas fa-motorcycle"></i> Receber em Casa
+            </button>
+            <button type="button" class="delivery-type-btn" data-type="takeout">
+              <i class="fas fa-store"></i> Retirar no Balcão
+            </button>
+          </div>
+        </div>
+
+        <!-- Dados Pessoais -->
+        <div class="form-section">
+          <label class="form-section-title"><i class="fas fa-user"></i> Seus Dados</label>
+          
+          <div class="form-group">
+            <label for="checkout-name">Nome Completo <span class="required">*</span></label>
+            <input type="text" id="checkout-name" class="form-control" placeholder="Ex: Maria da Silva" required>
+          </div>
+
+          <div class="form-group">
+            <label for="checkout-phone">WhatsApp / Celular <span class="required">*</span></label>
+            <input type="tel" id="checkout-phone" class="form-control" placeholder="(81) 99999-9999" required maxlength="15">
+          </div>
+        </div>
+
+        <!-- Endereço de Entrega (Se Delivery) -->
+        <div class="form-section" id="address-fields-container">
+          <label class="form-section-title"><i class="fas fa-map-marker-alt"></i> Endereço para Entrega</label>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="checkout-cep">CEP</label>
+              <input type="text" id="checkout-cep" class="form-control" placeholder="00000-000" maxlength="9">
+            </div>
+            <div class="form-group">
+              <label for="checkout-neighborhood">Bairro <span class="required">*</span></label>
+              <select id="checkout-neighborhood" class="form-control" required>
+                <!-- Preenchido via checkout.js -->
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="grid-column: span 1 / -1;">
+              <label for="checkout-street">Rua / Avenida <span class="required">*</span></label>
+              <input type="text" id="checkout-street" class="form-control" placeholder="Nome da rua ou avenida" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="checkout-number">Número <span class="required">*</span></label>
+              <input type="text" id="checkout-number" class="form-control" placeholder="Ex: 120" required>
+            </div>
+            <div class="form-group">
+              <label for="checkout-complement">Complemento</label>
+              <input type="text" id="checkout-complement" class="form-control" placeholder="Apto 102, Bloco B">
+            </div>
+          </div>
+
+          <!-- Ponto de Referência Obrigatório e Destacado -->
+          <div class="reference-point-box">
+            <label for="checkout-reference">
+              <i class="fas fa-map-pin"></i> <strong>Ponto de Referência</strong> <span class="required">*</span>
+            </label>
+            <input type="text" id="checkout-reference" class="form-control" placeholder="Ex: Em frente à padaria, portão branco, ao lado do mercado..." required style="margin-top: 4px;">
+            <small style="color: #a16207; font-size: 11px; display: block; margin-top: 3px;">
+              Fundamental para que o entregador de remédios encontre sua casa rapidamente.
+            </small>
+          </div>
+        </div>
+
+        <!-- Forma de Pagamento -->
+        <div class="form-section">
+          <label class="form-section-title"><i class="fas fa-credit-card"></i> Como deseja pagar?</label>
+          
+          <div class="payment-methods-grid">
+            
+            <!-- Opção Pix -->
+            <label class="payment-card active" data-payment="pix">
+              <input type="radio" name="payment_method" value="pix" checked>
+              <div class="payment-card-content">
+                <div class="payment-card-title">
+                  <i class="fas fa-qrcode" style="color: var(--primary);"></i> Pagar via Pix (Copia e Cola / QR Code)
+                  <span class="payment-pill-badge">Rápido</span>
+                </div>
+                <div class="payment-card-desc">Pague pelo app do seu banco com desconto e envio imediato</div>
+              </div>
+            </label>
+
+            <!-- Detalhes do Pix (Expansível) -->
+            <div class="pix-details-box" id="pix-details-container">
+              <span style="font-size: 12px; font-weight: 700; color: #166534; display: block;">
+                Chave Pix da Farmácia do Trabalhador
+              </span>
+              
+              <div class="pix-qr-container">
+                <img id="pix-qr-img" src="" alt="QR Code Pix">
+              </div>
+
+              <span style="font-size: 11px; color: var(--text-muted); display: block;">
+                Beneficiário: <strong id="pix-beneficiary-name">Farmácia do Trabalhador Ltda</strong><br>
+                Valor a pagar: <strong id="pix-amount-display" style="color: var(--primary);">R$ 0,00</strong>
+              </span>
+
+              <div class="pix-copy-input-group">
+                <input type="text" id="pix-key-input" class="form-control" readonly style="background: #ffffff; text-align: center; font-size: 11px;">
+                <button type="button" class="btn-copy-pix" id="btn-copy-pix-key">
+                  <i class="fas fa-copy"></i> Copiar
+                </button>
+              </div>
+              <small style="display: block; font-size: 10px; color: #15803d; margin-top: 6px;">
+                * Envie o comprovante na conversa do WhatsApp para liberação imediata.
+              </small>
+            </div>
+
+            <!-- Opção Link de Pagamento Online -->
+            <label class="payment-card" data-payment="link">
+              <input type="radio" name="payment_method" value="link">
+              <div class="payment-card-content">
+                <div class="payment-card-title">
+                  <i class="fas fa-link" style="color: var(--accent);"></i> Link de Pagamento Online
+                </div>
+                <div class="payment-card-desc">Pague com cartão de crédito via Mercado Pago / PagBank</div>
+              </div>
+            </label>
+
+            <div class="pix-details-box" id="link-details-container" style="display: none; background-color: #f0f9ff; border-color: #bae6fd;">
+              <p style="font-size: 12px; color: #0369a1; margin-bottom: 8px;">
+                Você pode realizar o pagamento online com cartão de crédito pelo link seguro:
+              </p>
+              <a href="#" target="_blank" id="btn-open-payment-link" class="btn-primary-block" style="background: #0284c7; font-size: 12px; padding: 10px;">
+                <i class="fas fa-external-link-alt"></i> Acessar Link de Pagamento
+              </a>
+            </div>
+
+            <!-- Opção Dinheiro na Entrega -->
+            <label class="payment-card" data-payment="money">
+              <input type="radio" name="payment_method" value="money">
+              <div class="payment-card-content">
+                <div class="payment-card-title">
+                  <i class="fas fa-money-bill-wave" style="color: #16a34a;"></i> Dinheiro na Entrega
+                </div>
+                <div class="payment-card-desc">Pague em espécie diretamente ao entregador</div>
+              </div>
+            </label>
+
+            <div class="pix-details-box" id="money-details-container" style="display: none; background-color: #fefce8; border-color: #fef08a; text-align: left;">
+              <label style="font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="checkbox" id="need-change-checkbox" style="width: 16px; height: 16px;">
+                Precisa de troco?
+              </label>
+              <div id="change-input-group" style="display: none; margin-top: 8px;">
+                <label for="checkout-change-for" style="font-size: 11px; font-weight: 600;">Troco para quanto?</label>
+                <input type="number" id="checkout-change-for" class="form-control" placeholder="Ex: 50.00 ou 100.00" step="0.50">
+              </div>
+            </div>
+
+            <!-- Opção Cartão na Maquininha na Entrega -->
+            <label class="payment-card" data-payment="card_delivery">
+              <input type="radio" name="payment_method" value="card_delivery">
+              <div class="payment-card-content">
+                <div class="payment-card-title">
+                  <i class="fas fa-credit-card" style="color: #6366f1;"></i> Cartão na Entrega (Maquininha)
+                </div>
+                <div class="payment-card-desc">O entregador leva a maquininha até você</div>
+              </div>
+            </label>
+
+            <div class="pix-details-box" id="card-details-container" style="display: none; background-color: #f5f3ff; border-color: #ddd6fe; text-align: left;">
+              <label style="font-size: 11px; font-weight: 700; color: #4338ca; display: block; margin-bottom: 6px;">Qual é a modalidade do seu cartão?</label>
+              <div style="display: flex; gap: 12px; font-size: 12px;">
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="radio" name="card_flag" value="Débito" checked> Débito
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="radio" name="card_flag" value="Crédito"> Crédito
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="radio" name="card_flag" value="Voucher/Alimentação"> Convênio
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Observações Opcionais -->
+        <div class="form-section">
+          <div class="form-group">
+            <label for="checkout-notes">Observações do Pedido (Opcional)</label>
+            <textarea id="checkout-notes" class="form-control" rows="2" placeholder="Ex: Se não tiver a marca X pode ser genérico; campainha não funciona..."></textarea>
+          </div>
+        </div>
+
+        <!-- Resumo Financeiro Final -->
+        <div class="summary-box">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="checkout-subtotal-val">R$ 0,00</span>
+          </div>
+          <div class="summary-row">
+            <span>Taxa de Entrega</span>
+            <span id="checkout-fee-val">R$ 0,00</span>
+          </div>
+          <div class="summary-row total-row">
+            <span>Total a Pagar</span>
+            <span id="checkout-total-val">R$ 0,00</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="drawer-footer">
+        <button class="btn-primary-block btn-whatsapp" id="btn-submit-order-whatsapp">
+          <i class="fab fa-whatsapp" style="font-size: 18px;"></i>
+          <span>Enviar Pedido no WhatsApp (<span id="submit-btn-total-val">R$ 0,00</span>)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container de Toasts -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/checkout.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

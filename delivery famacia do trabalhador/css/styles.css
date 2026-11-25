@@ -1,0 +1,1327 @@
+/* ==========================================================================
+   DELIVERY FARMÁCIA DO TRABALHADOR - DESIGN SYSTEM
+   Visual Moderno, Limpo, Confiável e 100% Mobile-First
+   ========================================================================== */
+
+:root {
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-light: #ecfdf5;
+  --primary-rgb: 5, 150, 105;
+  --accent: #0284c7;
+  --accent-light: #e0f2fe;
+  
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --success: #16a34a;
+  
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-input: #f1f5f9;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  
+  --border-color: #e2e8f0;
+  --border-focus: #10b981;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-drawer: 0 -10px 25px -5px rgb(0 0 0 / 0.15);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+/* Container do App (Mobile-First centralizado no Desktop) */
+.app-container {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100vh;
+  background-color: var(--bg-card);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 85px; /* Espaço para a barra da sacola */
+}
+
+/* ==========================================================================
+   CABEÇALHO DA FARMÁCIA
+   ========================================================================== */
+.store-header {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  color: #ffffff;
+  padding: 20px 16px 16px;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.store-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.admin-link {
+  display: none;
+}
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.12);
+  transition: all 0.2s;
+}
+
+.admin-link:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.store-info-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.store-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background-color: #ffffff;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.store-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.store-logo i {
+  font-size: 32px;
+  color: var(--primary);
+}
+
+.store-details {
+  flex: 1;
+}
+
+.store-name {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.store-name .verified-icon {
+  color: #38bdf8;
+  font-size: 15px;
+}
+
+.store-slogan {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 6px;
+}
+
+.store-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.status-open {
+  background-color: #22c55e;
+  color: #ffffff;
+}
+
+.status-closed {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.delivery-time {
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Barra de Destaques Rápidos */
+.store-quick-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 14px;
+  gap: 8px;
+  text-align: center;
+}
+
+.quick-feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.quick-feature-item i {
+  color: var(--primary);
+  font-size: 15px;
+}
+
+.quick-feature-item span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.quick-feature-item small {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   BARRA DE BUSCA E CATEGORIAS (STICKY)
+   ========================================================================== */
+.sticky-nav-container {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.search-box-wrapper {
+  padding: 12px 16px 8px;
+}
+
+.search-input-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.search-input-box:focus-within {
+  border-color: var(--primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+}
+
+.search-input-box i {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.search-input-box input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 14px;
+  outline: none;
+  color: var(--text-main);
+}
+
+.search-input-box input::placeholder {
+  color: var(--text-subtle);
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-subtle);
+  cursor: pointer;
+  padding: 2px;
+  display: none;
+}
+
+.search-clear-btn:hover {
+  color: var(--text-main);
+}
+
+/* Carrossel de Categorias */
+.categories-nav {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 6px 16px 12px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.categories-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.category-pill {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-input);
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-pill i {
+  font-size: 13px;
+}
+
+.category-pill:hover {
+  background-color: #e2e8f0;
+  color: var(--text-main);
+}
+
+.category-pill.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+}
+
+/* ==========================================================================
+   CATÁLOGO DE PRODUTOS
+   ========================================================================== */
+.catalog-content {
+  padding: 16px;
+  flex: 1;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title i {
+  color: var(--primary);
+}
+
+.products-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Grid de Produtos */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.product-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.product-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-sm);
+}
+
+.product-image-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  background-color: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+.product-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.prescription-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background-color: var(--danger);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.product-lab {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.product-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-main);
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 34px;
+}
+
+.product-presentation {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-indication {
+  font-size: 10.5px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border-left: 2px solid #0284c7;
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-indication i {
+  color: #0284c7;
+  margin-right: 3px;
+}
+
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  width: fit-content;
+}
+
+.stock-badge.stock-in {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.stock-badge.stock-low {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.stock-badge.stock-out {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.product-pricing {
+  margin-top: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.product-price-old {
+  font-size: 11px;
+  color: var(--text-subtle);
+  text-decoration: line-through;
+}
+
+.product-price-current {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Botão de Adicionar / Quantidade */
+.product-action-btn {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(var(--primary-rgb), 0.25);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.product-action-btn:hover {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.qty-control-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background-color: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: #ffffff;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s;
+}
+
+.qty-btn:active {
+  transform: scale(0.9);
+}
+
+.qty-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Estado Vazio */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state i {
+  font-size: 48px;
+  color: var(--text-subtle);
+  margin-bottom: 12px;
+}
+
+.empty-state h3 {
+  font-size: 16px;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+/* ==========================================================================
+   BARRA DA SACOLA FLUTUANTE (BOTTOM BAR)
+   ========================================================================== */
+.floating-cart-bar {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  left: auto;
+  transform: none;
+  width: 100%;
+  max-width: 520px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+  display: none; /* Exibido via JS quando houver itens */
+}
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 520px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+  display: none; /* Exibido via JS quando houver itens */
+}
+
+.cart-bar-button {
+  width: 100%;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
+  transition: all 0.2s;
+}
+
+.cart-bar-button:active {
+  transform: scale(0.98);
+}
+
+.cart-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-badge-count {
+  background-color: #ffffff;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.cart-bar-total {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   DRAWER / MODAL DA SACOLA E CHECKOUT
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.drawer-content {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  background-color: #ffffff;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-drawer);
+  overflow: hidden;
+}
+
+.modal-overlay.active .drawer-content {
+  transform: translateY(0);
+}
+
+.drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+}
+
+.drawer-title {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-main);
+}
+
+.drawer-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-close-btn:hover {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+
+.drawer-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.drawer-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  background-color: #ffffff;
+}
+
+/* Itens da Sacola */
+.cart-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cart-item-img {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background-color: var(--bg-input);
+}
+
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.cart-item-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Resumo de Valores */
+.summary-box {
+  background-color: var(--bg-main);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.summary-row.total-row {
+  border-top: 1px dashed var(--border-color);
+  padding-top: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.summary-row.total-row span:last-child {
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   FORMULÁRIOS DE CHECKOUT
+   ========================================================================== */
+.form-section {
+  margin-bottom: 20px;
+}
+
+.form-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.delivery-options-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.delivery-type-btn {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.delivery-type-btn.active {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.form-group label span.required {
+  color: var(--danger);
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: #ffffff;
+  font-size: 13px;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.12);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Ponto de Referência Destacado */
+.reference-point-box {
+  background-color: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.reference-point-box label {
+  color: #854d0e;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Opções de Pagamento (Cards Selecionáveis) */
+.payment-methods-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payment-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.payment-card:hover {
+  border-color: #cbd5e1;
+}
+
+.payment-card.active {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.payment-card input[type="radio"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+}
+
+.payment-card-content {
+  flex: 1;
+}
+
+.payment-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.payment-card-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.payment-pill-badge {
+  background-color: #dcfce7;
+  color: #166534;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+}
+
+/* Caixa de Pix Detalhada */
+.pix-details-box {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.pix-qr-container {
+  width: 140px;
+  height: 140px;
+  margin: 10px auto;
+  background-color: #ffffff;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pix-qr-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pix-copy-input-group {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn-copy-pix {
+  background-color: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Alerta de Medicamentos Controlados / Receita */
+.prescription-warning-banner {
+  background-color: var(--danger-light);
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.prescription-warning-banner i {
+  color: var(--danger);
+  font-size: 18px;
+  margin-top: 2px;
+}
+
+.prescription-warning-banner p {
+  font-size: 12px;
+  color: #991b1b;
+  line-height: 1.4;
+}
+
+/* Botões Principais */
+.btn-primary-block {
+  width: 100%;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
+  transition: all 0.2s;
+}
+
+.btn-primary-block:hover {
+  background: #047857;
+}
+
+.btn-whatsapp {
+  background: #25d366 !important;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35) !important;
+}
+
+.btn-whatsapp:hover {
+  background: #20ba59 !important;
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  width: 90%;
+  max-width: 400px;
+}
+
+.toast {
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastIn 0.3s forwards;
+  pointer-events: auto;
+}
+
+.toast.toast-success {
+  background-color: #065f46;
+  border-left: 4px solid #34d399;
+}
+
+.toast.toast-error {
+  background-color: #7f1d1d;
+  border-left: 4px solid #f87171;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   ADMIN LOGIN SCREEN & AUTH GUARD
+   ========================================================================== */
+#admin-auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: toastIn 0.35s ease-out;
+}
+
+.auth-card-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+}
+
+.auth-card h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.auth-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.color-presets-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.color-preset-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+}
+
+.color-preset-btn:hover {
+  transform: scale(1.15);
+}
+
+.color-preset-btn.active {
+  box-shadow: 0 0 0 3px var(--text-main);
+}
+
+/* Modal de Edição Completa de Produtos */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.admin-modal-overlay.open {
+  display: flex;
+}
+
+.admin-modal-card {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  position: relative;
+  animation: toastIn 0.25s ease-out;
+}
+
