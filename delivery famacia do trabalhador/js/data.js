@@ -418,22 +418,115 @@ class StoreDB {
     localStorage.setItem("farmacia_neighborhoods", JSON.stringify(neighborhoods));
   }
 
+  static _productsCache = null;
+  static _dbPromise = null;
+
+  static _openProductsDB() {
+    if (StoreDB._dbPromise) return StoreDB._dbPromise;
+    StoreDB._dbPromise = new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        reject(new Error("IndexedDB não suportado"));
+        return;
+      }
+      const req = indexedDB.open("FarmaciaCatalogoDB", 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("catalog")) {
+          db.createObjectStore("catalog");
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return StoreDB._dbPromise;
+  }
+
+  static _normalizeProduct(p) {
+    return {
+      ...p,
+      stockQuantity: p.stockQuantity !== undefined ? Number(p.stockQuantity) : 20,
+      indication: p.indication || p.description || ""
+    };
+  }
+
+  /**
+   * Inicializa o catálogo via IndexedDB (suporta 20.000+ itens sem limite de 5MB do localStorage)
+   */
+  static async initProducts() {
+    if (StoreDB._productsCache !== null) return StoreDB._productsCache;
+
+    try {
+      const db = await StoreDB._openProductsDB();
+      const stored = await new Promise((resolve, reject) => {
+        const tx = db.transaction("catalog", "readonly");
+        const store = tx.objectStore("catalog");
+        const req = store.get("products");
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+
+      if (Array.isArray(stored) && stored.length > 0) {
+        StoreDB._productsCache = stored.map(StoreDB._normalizeProduct);
+        return StoreDB._productsCache;
+      }
+    } catch (e) {
+      console.warn("Fallback para localStorage ao inicializar produtos:", e);
+    }
+
+    // Migração automática do localStorage para o IndexedDB
+    const saved = localStorage.getItem("farmacia_products");
+    let products = DEFAULT_PRODUCTS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) products = parsed;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    StoreDB._productsCache = products.map(StoreDB._normalizeProduct);
+    await StoreDB.saveProducts(StoreDB._productsCache);
+    return StoreDB._productsCache;
+  }
+
   static getProducts() {
+    if (StoreDB._productsCache !== null) {
+      return StoreDB._productsCache;
+    }
+
     const saved = localStorage.getItem("farmacia_products");
     let products = DEFAULT_PRODUCTS;
     if (saved) {
       try { products = JSON.parse(saved); } catch (e) { console.error(e); }
     }
-    // Garante que todo produto tenha stockQuantity e indication definidos
-    return products.map(p => ({
-      ...p,
-      stockQuantity: p.stockQuantity !== undefined ? Number(p.stockQuantity) : 20,
-      indication: p.indication || p.description || ""
-    }));
+    StoreDB._productsCache = products.map(StoreDB._normalizeProduct);
+    return StoreDB._productsCache;
   }
 
-  static saveProducts(products) {
-    localStorage.setItem("farmacia_products", JSON.stringify(products));
+  static async saveProducts(products) {
+    const normalized = products.map(StoreDB._normalizeProduct);
+    StoreDB._productsCache = normalized;
+
+    try {
+      const db = await StoreDB._openProductsDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction("catalog", "readwrite");
+        const store = tx.objectStore("catalog");
+        const req = store.put(normalized, "products");
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+      // Remove do localStorage para não estourar a cota de 5MB com catálogos grandes
+      localStorage.removeItem("farmacia_products");
+    } catch (e) {
+      console.warn("Erro ao salvar no IndexedDB, tentando localStorage:", e);
+      try {
+        localStorage.setItem("farmacia_products", JSON.stringify(normalized));
+      } catch (lsErr) {
+        console.error("Limite de armazenamento atingido:", lsErr);
+      }
+    }
   }
 
   static getCategories() {
@@ -494,9 +587,21 @@ class StoreDB {
     }
   }
 
-  static resetToDefaults() {
+  static async resetToDefaults() {
     localStorage.removeItem("farmacia_store_config");
     localStorage.removeItem("farmacia_neighborhoods");
     localStorage.removeItem("farmacia_products");
+    StoreDB._productsCache = null;
+    try {
+      const db = await StoreDB._openProductsDB();
+      await new Promise((resolve) => {
+        const tx = db.transaction("catalog", "readwrite");
+        tx.objectStore("catalog").delete("products");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      });
+    } catch (e) {
+      console.warn("Erro ao limpar IndexedDB:", e);
+    }
   }
 }

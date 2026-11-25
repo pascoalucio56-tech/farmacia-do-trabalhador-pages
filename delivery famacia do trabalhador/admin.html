@@ -519,6 +519,27 @@
             <i class="fas fa-plus"></i> Salvar e Incluir Produto no Catálogo
           </button>
         </form>
+
+        <!-- Importação em Massa (Ilimitada: 20.000+ itens via CSV ou JSON) -->
+        <div style="margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <strong style="font-size: 13px; color: var(--text-main);">
+                <i class="fas fa-file-upload" style="color: var(--primary);"></i> Importação em Massa (Ilimitada — 20.000+ itens)
+              </strong>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Envie um arquivo <strong>.CSV</strong> (<code>nome;categoria;indicacao;apresentacao;laboratorio;preco;estoque</code>) ou <strong>.JSON</strong> para incluir milhares de produtos de uma vez.
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="file" id="bulk-import-file" accept=".csv,.json,.txt" style="display: none;">
+              <button type="button" id="btn-bulk-import" class="btn-sm btn-outline-primary" style="padding: 8px 14px; font-weight: 600;">
+                <i class="fas fa-upload"></i> Importar CSV / JSON
+              </button>
+            </div>
+          </div>
+          <div id="bulk-import-status" style="display: none; margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--primary);"></div>
+        </div>
       </div>
 
       <!-- Barra de Pesquisa de Produtos da Tabela -->
@@ -552,6 +573,20 @@
             <!-- Renderizado dinamicamente -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Paginação da Tabela de Produtos -->
+      <div id="admin-products-pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-muted);">
+        <span id="admin-pagination-info">Mostrando 0 produtos</span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button type="button" id="btn-admin-prev-page" class="btn-sm btn-outline-primary" style="padding: 6px 12px;">
+            <i class="fas fa-chevron-left"></i> Anterior
+          </button>
+          <span id="admin-page-indicator" style="font-weight: 700; color: var(--text-main); padding: 0 6px;">Página 1 de 1</span>
+          <button type="button" id="btn-admin-next-page" class="btn-sm btn-outline-primary" style="padding: 6px 12px;">
+            Próxima <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -735,11 +770,12 @@
     /**
      * Inicializa todo o Painel da Farmácia após login
      */
-    function initAdminPanel() {
+    async function initAdminPanel() {
       loadAdminConfig();
+      await StoreDB.initProducts();
       renderAdminOrders();
       renderAdminNeighborhoods();
-      renderAdminProducts();
+      renderAdminProducts("", 1);
       setupAdminForms();
     }
 
@@ -925,10 +961,10 @@
         showToast(`Bairro ${name} cadastrado!`, "success");
       };
 
-      // 6. Adicionar Novo Produto (com Estoque e Indicação)
+      // 6. Adicionar Novo Produto (com Estoque e Indicação — sem limite de itens via IndexedDB)
       const addProductForm = document.getElementById("add-product-form");
       if (addProductForm) {
-        addProductForm.onsubmit = (e) => {
+        addProductForm.onsubmit = async (e) => {
           e.preventDefault();
           const name = document.getElementById("new-prod-name").value.trim();
           const indication = document.getElementById("new-prod-indication").value.trim();
@@ -946,7 +982,7 @@
           const defaultImg = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop&q=80";
 
           const newProduct = {
-            id: Date.now(),
+            id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
             name,
             indication,
             description: indication,
@@ -964,19 +1000,132 @@
 
           const products = StoreDB.getProducts();
           products.unshift(newProduct);
-          StoreDB.saveProducts(products);
+          await StoreDB.saveProducts(products);
 
-          renderAdminProducts();
+          renderAdminProducts(currentAdminFilter, 1);
           addProductForm.reset();
           document.getElementById("new-prod-stock").value = "20";
-          showToast(`Produto "${name}" incluído com sucesso!`, "success");
+          showToast(`Produto "${name}" incluído! Total: ${products.length} itens.`, "success");
         };
       }
 
-      // 7. Busca de Produtos
+      // 6b. Importação em Massa (CSV / JSON para 20.000+ itens)
+      const bulkBtn = document.getElementById("btn-bulk-import");
+      const bulkInput = document.getElementById("bulk-import-file");
+      const bulkStatus = document.getElementById("bulk-import-status");
+      if (bulkBtn && bulkInput) {
+        bulkBtn.addEventListener("click", () => bulkInput.click());
+        bulkInput.addEventListener("change", async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          if (bulkStatus) {
+            bulkStatus.style.display = "block";
+            bulkStatus.textContent = `Lendo arquivo "${file.name}"...`;
+          }
+
+          try {
+            const text = await file.text();
+            const defaultImg = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop&q=80";
+            let importedItems = [];
+
+            if (file.name.toLowerCase().endsWith(".json")) {
+              const parsed = JSON.parse(text);
+              if (!Array.isArray(parsed)) throw new Error("O arquivo JSON deve conter uma lista [ ... ] de produtos.");
+              importedItems = parsed.map((item, idx) => ({
+                id: item.id || (Date.now() * 1000 + idx),
+                name: String(item.name || item.nome || `Produto ${idx + 1}`).trim(),
+                indication: String(item.indication || item.indicacao || item.description || "").trim(),
+                description: String(item.description || item.indication || item.indicacao || "").trim(),
+                presentation: String(item.presentation || item.apresentacao || "").trim(),
+                laboratory: String(item.laboratory || item.laboratorio || "Genérico / Similar").trim(),
+                category: String(item.category || item.categoria || "medicamentos").trim(),
+                price: parseFloat(item.price || item.preco) || 0,
+                oldPrice: parseFloat(item.oldPrice || item.precoAntigo) || 0,
+                stockQuantity: item.stockQuantity !== undefined ? parseInt(item.stockQuantity) : (parseInt(item.estoque) || 20),
+                badge: String(item.badge || "").trim(),
+                image: String(item.image || item.imagem || defaultImg).trim(),
+                requiresPrescription: Boolean(item.requiresPrescription || item.receita),
+                available: item.available !== false
+              }));
+            } else {
+              const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+              const firstLineLower = (lines[0] || "").toLowerCase();
+              const startIdx = (firstLineLower.includes("nome") || firstLineLower.includes("name")) ? 1 : 0;
+              const baseId = Date.now() * 1000;
+
+              for (let i = startIdx; i < lines.length; i++) {
+                const sep = lines[i].includes(";") ? ";" : ",";
+                const cols = lines[i].split(sep).map(c => c.trim().replace(/^"|"$/g, ""));
+                if (!cols[0]) continue;
+                const price = parseFloat((cols[5] || "0").replace(",", ".")) || 0;
+                const stockQuantity = parseInt(cols[6] || "20") || 0;
+                const receitaFlag = (cols[7] || "").toLowerCase();
+
+                importedItems.push({
+                  id: baseId + i,
+                  name: cols[0],
+                  category: cols[1] || "medicamentos",
+                  indication: cols[2] || "",
+                  description: cols[2] || "",
+                  presentation: cols[3] || "",
+                  laboratory: cols[4] || "Genérico / Similar",
+                  price,
+                  oldPrice: 0,
+                  stockQuantity,
+                  badge: "",
+                  image: defaultImg,
+                  requiresPrescription: receitaFlag === "sim" || receitaFlag === "true" || receitaFlag === "1",
+                  available: stockQuantity > 0
+                });
+              }
+            }
+
+            if (importedItems.length === 0) {
+              throw new Error("Nenhum item válido encontrado no arquivo.");
+            }
+
+            const existing = StoreDB.getProducts();
+            const merged = importedItems.concat(existing);
+            await StoreDB.saveProducts(merged);
+
+            if (bulkStatus) {
+              bulkStatus.textContent = `✅ ${importedItems.length} itens importados! Total no catálogo: ${merged.length} produtos.`;
+            }
+            renderAdminProducts(currentAdminFilter, 1);
+            showToast(`${importedItems.length} produtos importados com sucesso!`, "success");
+          } catch (err) {
+            console.error(err);
+            if (bulkStatus) {
+              bulkStatus.style.color = "#dc2626";
+              bulkStatus.textContent = `Erro na importação: ${err.message}`;
+            }
+            showToast("Erro ao importar arquivo: " + err.message, "error");
+          } finally {
+            bulkInput.value = "";
+          }
+        });
+      }
+
+      // 7. Busca de Produtos e Paginação
       document.getElementById("admin-search-products").addEventListener("input", (e) => {
-        renderAdminProducts(e.target.value);
+        renderAdminProducts(e.target.value, 1);
       });
+
+      const prevBtn = document.getElementById("btn-admin-prev-page");
+      const nextBtn = document.getElementById("btn-admin-next-page");
+      if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+          if (currentAdminPage > 1) {
+            renderAdminProducts(currentAdminFilter, currentAdminPage - 1);
+          }
+        });
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          renderAdminProducts(currentAdminFilter, currentAdminPage + 1);
+        });
+      }
 
       // 8. Salvar Edição Completa no Modal
       const editModalForm = document.getElementById("edit-product-form");
@@ -1112,9 +1261,18 @@
       showToast("Bairro removido com sucesso!", "success");
     };
 
-    function renderAdminProducts(filter = "") {
+    const ADMIN_PAGE_SIZE = 50;
+    let currentAdminFilter = "";
+    let currentAdminPage = 1;
+
+    function renderAdminProducts(filter = currentAdminFilter, page = currentAdminPage) {
+      currentAdminFilter = filter;
       const tbody = document.getElementById("products-table-body");
       const countEl = document.getElementById("admin-product-count");
+      const pageInfoEl = document.getElementById("admin-pagination-info");
+      const pageIndicatorEl = document.getElementById("admin-page-indicator");
+      const prevBtn = document.getElementById("btn-admin-prev-page");
+      const nextBtn = document.getElementById("btn-admin-next-page");
       if (!tbody) return;
 
       let products = StoreDB.getProducts();
@@ -1128,11 +1286,19 @@
         );
       }
 
-      if (countEl) countEl.textContent = `${products.length} produtos`;
+      const totalItems = products.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / ADMIN_PAGE_SIZE));
+      currentAdminPage = Math.min(Math.max(1, page), totalPages);
+
+      if (countEl) countEl.textContent = `${totalItems} produtos`;
+      if (pageIndicatorEl) pageIndicatorEl.textContent = `Página ${currentAdminPage} de ${totalPages}`;
+      if (prevBtn) prevBtn.disabled = currentAdminPage <= 1;
+      if (nextBtn) nextBtn.disabled = currentAdminPage >= totalPages;
 
       tbody.innerHTML = "";
 
-      if (products.length === 0) {
+      if (totalItems === 0) {
+        if (pageInfoEl) pageInfoEl.textContent = "Mostrando 0 produtos";
         tbody.innerHTML = `
           <tr>
             <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
@@ -1143,7 +1309,15 @@
         return;
       }
 
-      products.forEach((p) => {
+      const startIdx = (currentAdminPage - 1) * ADMIN_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + ADMIN_PAGE_SIZE, totalItems);
+      const pageProducts = products.slice(startIdx, endIdx);
+
+      if (pageInfoEl) {
+        pageInfoEl.textContent = `Mostrando ${startIdx + 1}–${endIdx} de ${totalItems} produtos (Armazenamento ilimitado)`;
+      }
+
+      pageProducts.forEach((p) => {
         const tr = document.createElement("tr");
         const stockQty = p.stockQuantity !== undefined ? Number(p.stockQuantity) : 20;
 

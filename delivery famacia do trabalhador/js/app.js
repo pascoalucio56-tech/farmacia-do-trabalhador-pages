@@ -8,11 +8,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let currentCategory = "all";
 let currentSearchTerm = "";
+const CATALOG_PAGE_SIZE = 60;
+let visibleCatalogLimit = CATALOG_PAGE_SIZE;
 
-function initApp() {
+async function initApp() {
   renderStoreInfo();
   renderCategories();
-  renderProducts();
+  await StoreDB.initProducts();
+  renderProducts(true);
   setupEventListeners();
   setupCartSubscriber();
   checkout.init();
@@ -83,7 +86,7 @@ function renderCategories() {
       document.querySelectorAll(".category-pill").forEach(p => p.classList.remove("active"));
       btn.classList.add("active");
       currentCategory = cat.id;
-      renderProducts();
+      renderProducts(true);
     });
 
     container.appendChild(btn);
@@ -93,10 +96,14 @@ function renderCategories() {
 /**
  * Renderiza os produtos filtrados com estoque e indicação ("Para que serve")
  */
-function renderProducts() {
+function renderProducts(resetLimit = false) {
   const grid = document.getElementById("products-grid");
   const countEl = document.getElementById("products-count");
   if (!grid) return;
+
+  if (resetLimit) {
+    visibleCatalogLimit = CATALOG_PAGE_SIZE;
+  }
 
   let products = StoreDB.getProducts();
 
@@ -134,7 +141,9 @@ function renderProducts() {
 
   grid.innerHTML = "";
 
-  products.forEach(p => {
+  const visibleProducts = products.slice(0, visibleCatalogLimit);
+
+  visibleProducts.forEach(p => {
     const qtyInCart = cart.getItemQty(p.id);
     const stockQty = p.stockQuantity !== undefined ? Number(p.stockQuantity) : 20;
     const isOutOfStock = p.available === false || stockQty <= 0;
@@ -228,6 +237,26 @@ function renderProducts() {
 
     grid.appendChild(card);
   });
+
+  if (products.length > visibleProducts.length) {
+    const remaining = products.length - visibleProducts.length;
+    const loadMoreWrap = document.createElement("div");
+    loadMoreWrap.style.cssText = "grid-column: 1 / -1; text-align: center; padding: 14px 0;";
+    loadMoreWrap.innerHTML = `
+      <button type="button" id="btn-load-more-catalog" class="btn-primary-block" style="max-width: 320px; margin: 0 auto; font-size: 13px; padding: 11px 16px;">
+        <i class="fas fa-plus-circle"></i> Carregar mais produtos (${remaining} restantes)
+      </button>
+    `;
+    grid.appendChild(loadMoreWrap);
+
+    const loadMoreBtn = document.getElementById("btn-load-more-catalog");
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener("click", () => {
+        visibleCatalogLimit += CATALOG_PAGE_SIZE;
+        renderProducts(false);
+      });
+    }
+  }
 }
 
 function handleCardAdd(productId) {
@@ -375,7 +404,7 @@ function setupEventListeners() {
       if (clearBtn) {
         clearBtn.style.display = currentSearchTerm ? "block" : "none";
       }
-      renderProducts();
+      renderProducts(true);
     });
   }
 
@@ -384,7 +413,7 @@ function setupEventListeners() {
       if (searchInput) searchInput.value = "";
       currentSearchTerm = "";
       clearBtn.style.display = "none";
-      renderProducts();
+      renderProducts(true);
     });
   }
 
